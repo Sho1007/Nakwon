@@ -9,9 +9,16 @@
 /**
  * 
  */
+class UImage;
 UCLASS()
 class NAKWON_API UInteractWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
+public:
+	void InitWidget();
+
+private:
+	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
+	UImage* Img_CrossHair;
 };
