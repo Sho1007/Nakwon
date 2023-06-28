@@ -4,6 +4,9 @@
 
 #include "../Nakwon.h"
 #include "GameFramework/Character.h"
+
+#include "../Interface/InteractInterface.h"
+
 #include "MyCharacter.generated.h"
 
 class USpringArmComponent;
@@ -12,8 +15,9 @@ class UInputMappingContext;
 class UInputAction;
 
 struct FInputActionValue;
+struct FItemInfo;
 UCLASS()
-class NAKWON_API AMyCharacter : public ACharacter
+class NAKWON_API AMyCharacter : public ACharacter, public IInteractInterface
 {
 	GENERATED_BODY()
 
@@ -32,10 +36,23 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+
+	UFUNCTION(Client, Reliable)
+	void ShowItemMenu(FName ItemName);
+	void ShowItemMenu_Implementation(FName ItemName);
 private:
+	UFUNCTION(Server, Reliable)
+	void CheckInteract();
+	void CheckInteract_Implementation();
+
+	// Action
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 private:
+	// Interact
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	float CheckInteractLength;
+
 	// Input
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	UInputMappingContext* DefaultContext;
@@ -55,4 +72,7 @@ private:
 	bool bIsAimed;
 	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
 	bool bIsStopBreath;
+
+	// Inherited via IInteractInterface
+	virtual void Interact(AActor* InteractActor) override;
 };

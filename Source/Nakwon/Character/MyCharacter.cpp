@@ -67,9 +67,35 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	}
 }
 
+void AMyCharacter::CheckInteract_Implementation()
+{
+	if (UWorld* World = GetWorld())
+	{
+		FVector Start = FollowCamera->GetComponentLocation() + (CameraBoom->TargetArmLength * FollowCamera->GetForwardVector());
+		FVector End = Start + CheckInteractLength * FollowCamera->GetForwardVector();
+		FHitResult HitResult;
+		if (World->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Camera))
+		{
+			if (!IsValid(HitResult.GetActor())) return;
+
+			if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
+			{
+				Interface->Interact(this);
+			}
+		}
+	}
+}
+
+void AMyCharacter::ShowItemMenu_Implementation(FName ItemName)
+{
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Yellow, FString::Printf(TEXT("ItemName : %s"), *ItemName.ToString()));
+}
+
 void AMyCharacter::Move(const FInputActionValue& Value)
 {
 	FVector2D MovementVector = Value.Get<FVector2D>();
+
+	if (MovementVector.IsZero()) return;
 
 	if (Controller != nullptr)
 	{
@@ -81,6 +107,8 @@ void AMyCharacter::Move(const FInputActionValue& Value)
 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
+
+		CheckInteract();
 	}
 }
 
@@ -88,9 +116,17 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 {
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
+	if (LookAxisVector.IsZero()) return;
+
 	if (Controller != nullptr)
 	{
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(-LookAxisVector.Y);
+
+		CheckInteract();
 	}
+}
+
+void AMyCharacter::Interact(AActor* InteractActor)
+{
 }
