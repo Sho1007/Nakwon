@@ -32,6 +32,6 @@ void AItemBase::Interact(AActor* InteractActor)
 	AMyCharacter* Character = Cast<AMyCharacter>(InteractActor);
 	if (Character)
 	{
-		Character->ShowItemMenu(FName(TEXT("Item")));
+		Character->ShowItemMenu(ItemRow);
 	}
 }

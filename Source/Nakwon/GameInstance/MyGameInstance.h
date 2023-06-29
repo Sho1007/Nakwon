@@ -9,8 +9,16 @@
 /**
  * 
  */
+class UDataTable;
+
+struct FItemInfo;
 UCLASS()
 class NAKWON_API UMyGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
+public:
+	FItemInfo* FindItemInfo(FName ItemName);
+private:
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	UDataTable* ItemInfoDataTable;
 };

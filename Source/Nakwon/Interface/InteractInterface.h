@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "../Nakwon.h"
 #include "UObject/Interface.h"
 #include "InteractInterface.generated.h"
 

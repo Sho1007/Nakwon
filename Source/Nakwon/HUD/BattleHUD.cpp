@@ -5,6 +5,16 @@
 
 #include "../Widget/Battle/InteractWidget.h"
 
+void ABattleHUD::ShowItemMenu(FName ItemName)
+{
+	InteractWidget->ShowItemMenu(ItemName);
+}
+
+void ABattleHUD::HideItemMenu()
+{
+	InteractWidget->HideItemMenu();
+}
+
 void ABattleHUD::BeginPlay()
 {
 	Super::BeginPlay();

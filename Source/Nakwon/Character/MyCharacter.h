@@ -36,14 +36,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-
-	UFUNCTION(Client, Reliable)
 	void ShowItemMenu(FName ItemName);
-	void ShowItemMenu_Implementation(FName ItemName);
+	void HideInteractMenu();
 private:
-	UFUNCTION(Server, Reliable)
 	void CheckInteract();
-	void CheckInteract_Implementation();
 
 	// Action
 	void Move(const FInputActionValue& Value);
@@ -52,6 +48,8 @@ private:
 	// Interact
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	float CheckInteractLength;
+
+	IInteractInterface* InteractActor;
 
 	// Input
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
@@ -74,5 +72,5 @@ private:
 	bool bIsStopBreath;
 
 	// Inherited via IInteractInterface
-	virtual void Interact(AActor* InteractActor) override;
+	virtual void Interact(AActor* TargetActor) override;
 };

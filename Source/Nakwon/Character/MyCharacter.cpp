@@ -10,6 +10,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
+#include "../HUD/BattleHUD.h"
+
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
@@ -67,8 +69,9 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	}
 }
 
-void AMyCharacter::CheckInteract_Implementation()
+void AMyCharacter::CheckInteract()
 {
+	if (!IsLocallyControlled()) return;
 	if (UWorld* World = GetWorld())
 	{
 		FVector Start = FollowCamera->GetComponentLocation() + (CameraBoom->TargetArmLength * FollowCamera->GetForwardVector());
@@ -76,19 +79,49 @@ void AMyCharacter::CheckInteract_Implementation()
 		FHitResult HitResult;
 		if (World->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Camera))
 		{
-			if (!IsValid(HitResult.GetActor())) return;
-
-			if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
+			if (IsValid(HitResult.GetActor()))
 			{
-				Interface->Interact(this);
+				if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
+				{
+					if (InteractActor != Interface)
+					{
+						if (InteractActor)
+						{
+							// Todo : Do Something before InteractActor
+						}
+						InteractActor = Interface;
+						InteractActor->Interact(this);
+					}
+					return;
+				}
 			}
+			
+		}
+	}
+	InteractActor = nullptr;
+	HideInteractMenu();
+}
+
+void AMyCharacter::ShowItemMenu(FName ItemName)
+{
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+		{
+			HUD->ShowItemMenu(ItemName);
 		}
 	}
 }
 
-void AMyCharacter::ShowItemMenu_Implementation(FName ItemName)
+void AMyCharacter::HideInteractMenu()
 {
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Yellow, FString::Printf(TEXT("ItemName : %s"), *ItemName.ToString()));
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+		{
+			HUD->HideItemMenu();
+		}
+	}
 }
 
 void AMyCharacter::Move(const FInputActionValue& Value)
@@ -127,6 +160,6 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AMyCharacter::Interact(AActor* InteractActor)
+void AMyCharacter::Interact(AActor* TargetActor)
 {
 }

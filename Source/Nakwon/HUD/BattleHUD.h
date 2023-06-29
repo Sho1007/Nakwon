@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "../Nakwon.h"
 #include "GameFramework/HUD.h"
 #include "BattleHUD.generated.h"
 
@@ -15,6 +15,10 @@ class NAKWON_API ABattleHUD : public AHUD
 {
 	GENERATED_BODY()
 	
+public:
+	void ShowItemMenu(FName ItemName);
+	void HideItemMenu();
+
 protected:
 	virtual void BeginPlay() override;
 

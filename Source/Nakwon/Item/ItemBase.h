@@ -2,19 +2,48 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
+#include "../Nakwon.h"
 #include "GameFramework/Actor.h"
 
 #include "../Interface/InteractInterface.h"
+#include "Engine/DataTable.h"
 
 #include "ItemBase.generated.h"
 
+UENUM(BlueprintType)
+enum class EItemAct : uint8
+{
+	NONE,
+	Equip,
+	USE,
+	TAKE,
+	EXAMINE,
+	SIZE,
+};
+
+class UTexture2D;
+UENUM(BlueprintType)
+enum class EItemType : uint8
+{
+	NONE,
+	EQUIPMENT,
+	CONSUMABLE,
+	INGREDIENT,
+	QUEST,
+	SIZE,
+};
+
 USTRUCT(BlueprintType)
-struct FItemInfo
+struct FItemInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
-
+	UPROPERTY(EditDefaultsOnly)
+	FName ItemName;
+	UPROPERTY(EditDefaultsOnly)
+	EItemType ItemType;
+	UPROPERTY(EditDefaultsOnly)
+	UTexture2D* ItemImage;
 };
 
 UCLASS()
@@ -39,5 +68,6 @@ public:
 	virtual void Interact(AActor* InteractActor) override;
 
 private:
-	FItemInfo ItemInfo;
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	FName ItemRow;
 };
