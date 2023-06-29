@@ -83,14 +83,14 @@ void AMyCharacter::CheckInteract()
 			{
 				if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
 				{
-					if (InteractActor != Interface)
+					if (CurrentInteractActor != Interface)
 					{
-						if (InteractActor)
+						if (CurrentInteractActor)
 						{
 							// Todo : Do Something before InteractActor
 						}
-						InteractActor = Interface;
-						InteractActor->Interact(this);
+						CurrentInteractActor = Interface;
+						CurrentInteractActor->ShowInteractMenu();
 					}
 					return;
 				}
@@ -98,19 +98,8 @@ void AMyCharacter::CheckInteract()
 			
 		}
 	}
-	InteractActor = nullptr;
+	CurrentInteractActor = nullptr;
 	HideInteractMenu();
-}
-
-void AMyCharacter::ShowItemMenu(FName ItemName)
-{
-	if (APlayerController* PC = GetController<APlayerController>())
-	{
-		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
-		{
-			HUD->ShowItemMenu(ItemName);
-		}
-	}
 }
 
 void AMyCharacter::HideInteractMenu()
@@ -160,6 +149,19 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AMyCharacter::Interact(AActor* TargetActor)
+void AMyCharacter::Interact(FName InteractionName)
 {
+}
+
+void AMyCharacter::ShowInteractMenu()
+{
+	// Todo : Check Health StateComponent if dead show Interact Menu
+	//if ()
+	return;
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+		{
+		}
+	}
 }

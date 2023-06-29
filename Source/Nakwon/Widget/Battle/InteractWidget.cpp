@@ -19,14 +19,14 @@ void UInteractWidget::InitWidget()
 	MenuArray.Add(Brd_Take);
 	MenuArray.Add(Brd_Examine);
 
-	HideItemMenu();
+	HideInteractMenu();
 }
 
-void UInteractWidget::ShowItemMenu(FName ItemName)
+void UInteractWidget::ShowInteractMenu(FName ItemName)
 {
 	if (ItemName.IsNone())
 	{
-		UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowItemMenu : ItemName is None"));
+		UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowInteractMenu : ItemName is None"));
 		return;
 	}
 	if (FItemInfo* ItemInfo = GetGameInstance<UMyGameInstance>()->FindItemInfo(ItemName))
@@ -34,7 +34,7 @@ void UInteractWidget::ShowItemMenu(FName ItemName)
 		ABattlePlayerState* PlayerState = GetOwningPlayerState<ABattlePlayerState>();
 		if (!PlayerState)
 		{
-			UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowItemMenu : PlayerState is not valid"));
+			UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowInteractMenu : PlayerState is not valid"));
 			return;
 		}
 
@@ -68,12 +68,12 @@ void UInteractWidget::ShowItemMenu(FName ItemName)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowItemMenu : Cannot Find Item in DataTable"));
+		UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowInteractMenu : Cannot Find Item in DataTable"));
 		return;
 	}
 }
 
-void UInteractWidget::HideItemMenu()
+void UInteractWidget::HideInteractMenu()
 {
 	Img_CrossHair->SetVisibility(ESlateVisibility::Collapsed);
 	TB_ItemName->SetVisibility(ESlateVisibility::Collapsed);

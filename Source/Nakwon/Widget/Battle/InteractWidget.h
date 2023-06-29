@@ -19,9 +19,8 @@ class NAKWON_API UInteractWidget : public UUserWidget
 	
 public:
 	void InitWidget();
-	void ShowItemMenu(FName ItemName);
-	void HideItemMenu();
-
+	void ShowInteractMenu(FName ItemName);
+	void HideInteractMenu();
 private:
 	void ActiveFirstMenu();
 private:

@@ -65,8 +65,8 @@ public:
 
 
 	// Inherited via IInteractInterface
-	virtual void Interact(AActor* InteractActor) override;
-
+	virtual void Interact(FName InteractionName) override;
+	virtual void ShowInteractMenu() override;
 private:
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	FName ItemRow;

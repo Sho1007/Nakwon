@@ -3,7 +3,7 @@
 
 #include "../Item/ItemBase.h"
 
-#include "../Character/MyCharacter.h"
+#include "../HUD/BattleHUD.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -27,11 +27,14 @@ void AItemBase::Tick(float DeltaTime)
 
 }
 
-void AItemBase::Interact(AActor* InteractActor)
+void AItemBase::Interact(FName InteractionName)
 {
-	AMyCharacter* Character = Cast<AMyCharacter>(InteractActor);
-	if (Character)
+}
+
+void AItemBase::ShowInteractMenu()
+{
+	if (ABattleHUD* HUD = GetWorld()->GetFirstPlayerController()->GetHUD<ABattleHUD>())
 	{
-		Character->ShowItemMenu(ItemRow);
+		HUD->ShowInteractMenu(ItemRow);
 	}
 }

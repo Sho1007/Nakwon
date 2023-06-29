@@ -36,7 +36,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void ShowItemMenu(FName ItemName);
+	// Inherited via IInteractInterface
+	virtual void Interact(FName InteractionName) override;
+	virtual void ShowInteractMenu() override;
 	void HideInteractMenu();
 private:
 	void CheckInteract();
@@ -49,7 +51,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	float CheckInteractLength;
 
-	IInteractInterface* InteractActor;
+	IInteractInterface* CurrentInteractActor;
 
 	// Input
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
@@ -70,7 +72,4 @@ private:
 	bool bIsAimed;
 	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
 	bool bIsStopBreath;
-
-	// Inherited via IInteractInterface
-	virtual void Interact(AActor* TargetActor) override;
 };

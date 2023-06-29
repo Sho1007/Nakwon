@@ -5,14 +5,14 @@
 
 #include "../Widget/Battle/InteractWidget.h"
 
-void ABattleHUD::ShowItemMenu(FName ItemName)
+void ABattleHUD::ShowInteractMenu(FName ItemName)
 {
-	InteractWidget->ShowItemMenu(ItemName);
+	InteractWidget->ShowInteractMenu(ItemName);
 }
 
 void ABattleHUD::HideItemMenu()
 {
-	InteractWidget->HideItemMenu();
+	InteractWidget->HideInteractMenu();
 }
 
 void ABattleHUD::BeginPlay()

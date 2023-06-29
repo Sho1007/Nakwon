@@ -16,7 +16,7 @@ class NAKWON_API ABattleHUD : public AHUD
 	GENERATED_BODY()
 	
 public:
-	void ShowItemMenu(FName ItemName);
+	void ShowInteractMenu(FName ItemName);
 	void HideItemMenu();
 
 protected:
