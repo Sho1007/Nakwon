@@ -12,6 +12,8 @@
 class UImage;
 class UTextBlock;
 class UBorder;
+class UVerticalBox;
+class UInteractMenuSlotWidget;
 UCLASS()
 class NAKWON_API UInteractWidget : public UUserWidget
 {
@@ -19,29 +21,25 @@ class NAKWON_API UInteractWidget : public UUserWidget
 	
 public:
 	void InitWidget();
-	void ShowInteractMenu(FName ItemName);
+	void ShowInteractMenu(const TArray<FText>& MenuTextArray, FText InteractActorName = FText());
 	void HideInteractMenu();
+	void SelectMenu(float WheelValue);
+
+	FText GetSelectInteractText() const;
 private:
 	void ActiveFirstMenu();
 private:
-	UPROPERTY( Meta = (AllowPrivateAccess = true, BindWidget))
-	UBorder* Brd_Menu;
-	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
-	UBorder* Brd_Use;
-	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
-	UBorder* Brd_Equip;
-	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
-	UBorder* Brd_Take;
-	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
-	UBorder* Brd_Examine;
 
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
-	TArray<UBorder*> MenuArray;
-
-	int32 ActiveMenu;
+	TSubclassOf<UInteractMenuSlotWidget> InteractMenuSlotWidgetClass;
+	int32 FocusMenuNum;
 
 	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
 	UImage* Img_CrossHair;
 	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
 	UTextBlock* TB_ItemName;
+	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
+	UBorder* Brd_Menu;
+	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
+	UVerticalBox* VB_Menu;
 };

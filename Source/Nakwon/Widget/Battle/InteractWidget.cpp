@@ -6,70 +6,45 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
+#include "Components/VerticalBox.h"
 
 #include "../../GameInstance/MyGameInstance.h"
 #include "../../PlayerState/BattlePlayerState.h"
 #include "../../Item/ItemBase.h"
-
+#include "InteractMenuSlotWidget.h"
 void UInteractWidget::InitWidget()
 {
-	UE_LOG(LogTemp, Warning, TEXT("UInteractWidget::InitWidget"));
-	MenuArray.Add(Brd_Equip);
-	MenuArray.Add(Brd_Use);
-	MenuArray.Add(Brd_Take);
-	MenuArray.Add(Brd_Examine);
-
 	HideInteractMenu();
 }
 
-void UInteractWidget::ShowInteractMenu(FName ItemName)
+void UInteractWidget::ShowInteractMenu(const TArray<FText>& MenuTextArray, FText InteractActorName)
 {
-	if (ItemName.IsNone())
-	{
-		UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowInteractMenu : ItemName is None"));
-		return;
-	}
-	if (FItemInfo* ItemInfo = GetGameInstance<UMyGameInstance>()->FindItemInfo(ItemName))
-	{
-		ABattlePlayerState* PlayerState = GetOwningPlayerState<ABattlePlayerState>();
-		if (!PlayerState)
-		{
-			UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowInteractMenu : PlayerState is not valid"));
-			return;
-		}
+	if (MenuTextArray.Num() == 0) return;
 
-		Img_CrossHair->SetVisibility(ESlateVisibility::Visible);
+	Img_CrossHair->SetVisibility(ESlateVisibility::Visible);
+
+	if (InteractActorName.IsEmpty() == false)
+	{
 		TB_ItemName->SetVisibility(ESlateVisibility::Visible);
-		Brd_Menu->SetVisibility(ESlateVisibility::Visible);
-		if (PlayerState->IsKnowItem(ItemName))
-		{
-			TB_ItemName->SetText(FText::FromName(ItemInfo->ItemName));
-
-			if (ItemInfo->ItemType == EItemType::CONSUMABLE)
-			{
-				// Check ConsumableType Use, Drink, 
-				// TB_Use->SetText();
-				MenuArray[(int)EItemAct::USE-1]->SetVisibility(ESlateVisibility::Visible);
-			}
-			else if (ItemInfo->ItemType == EItemType::EQUIPMENT)
-			{
-				MenuArray[(int)EItemAct::Equip-1]->SetVisibility(ESlateVisibility::Visible);
-			}
-
-			MenuArray[(int)EItemAct::TAKE-1]->SetVisibility(ESlateVisibility::Visible);
-		}
-		else
-		{
-			TB_ItemName->SetText(FText::FromName(TEXT("Unkown")));
-			MenuArray[(int)EItemAct::EXAMINE-1]->SetVisibility(ESlateVisibility::Visible);
-		}
-
-		ActiveFirstMenu();
+		TB_ItemName->SetText(InteractActorName);
 	}
-	else
+
+	Brd_Menu->SetVisibility(ESlateVisibility::Visible);
+
+	check(InteractMenuSlotWidgetClass);
+
+	FocusMenuNum = 0;
+	for (int i = 0; i < MenuTextArray.Num(); ++i)
 	{
-		UE_LOG(LogTemp, Error, TEXT("UInteractWidget::ShowInteractMenu : Cannot Find Item in DataTable"));
-		return;
+		UInteractMenuSlotWidget* InteractMenuSlotWidget = CreateWidget<UInteractMenuSlotWidget>(GetWorld(), InteractMenuSlotWidgetClass);
+		InteractMenuSlotWidget->SetText(MenuTextArray[i]);
+		InteractMenuSlotWidget->SetFocus(i == FocusMenuNum);
+		VB_Menu->AddChildToVerticalBox(InteractMenuSlotWidget);
+	}
+
+	for (int i = 0; i < VB_Menu->GetChildrenCount(); ++i)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%d Child : %s"), i, *Cast<UInteractMenuSlotWidget>(VB_Menu->GetChildAt(i))->GetText().ToString());
 	}
 }
 
@@ -78,24 +53,23 @@ void UInteractWidget::HideInteractMenu()
 	Img_CrossHair->SetVisibility(ESlateVisibility::Collapsed);
 	TB_ItemName->SetVisibility(ESlateVisibility::Collapsed);
 	Brd_Menu->SetVisibility(ESlateVisibility::Collapsed);
-	for (int i = 0; i < MenuArray.Num(); ++i)
-	{
-		MenuArray[i]->SetVisibility(ESlateVisibility::Collapsed);
-		MenuArray[i]->SetBrushColor(FLinearColor(1, 1, 1, 0));
-		FSlateColor Color = TB_ItemName->GetColorAndOpacity();
-		Cast<UTextBlock>(MenuArray[i]->GetChildAt(0))->SetColorAndOpacity(FLinearColor(1, 1, 1, 1));
-	}
+	VB_Menu->ClearChildren();
+}
+
+void UInteractWidget::SelectMenu(float WheelValue)
+{
+	Cast<UInteractMenuSlotWidget>(VB_Menu->GetChildAt(FocusMenuNum))->SetFocus(false);
+
+	FocusMenuNum = (FocusMenuNum + (int)WheelValue + VB_Menu->GetChildrenCount()) % VB_Menu->GetChildrenCount();
+
+	Cast<UInteractMenuSlotWidget>(VB_Menu->GetChildAt(FocusMenuNum))->SetFocus(true);
+}
+
+FText UInteractWidget::GetSelectInteractText() const
+{
+	return Cast<UInteractMenuSlotWidget>(VB_Menu->GetChildAt(FocusMenuNum))->GetText();
 }
 
 void UInteractWidget::ActiveFirstMenu()
 {
-	for (int32 i = 0; i < MenuArray.Num(); ++i)
-	{
-		if (MenuArray[i]->GetVisibility() == ESlateVisibility::Visible)
-		{
-			MenuArray[i]->SetBrushColor(FLinearColor(1, 1, 1, 0.6));
-			Cast<UTextBlock>(MenuArray[i]->GetChildAt(0))->SetColorAndOpacity(FLinearColor(0, 0, 0, 1));
-			break;
-		}
-	}
 }

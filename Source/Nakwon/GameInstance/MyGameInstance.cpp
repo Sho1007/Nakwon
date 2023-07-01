@@ -9,6 +9,7 @@ FItemInfo* UMyGameInstance::FindItemInfo(FName ItemName)
 {
     if (ItemInfoDataTable)
     {
+        UE_LOG(LogTemp, Error, TEXT("UMyGameInstance::FindItemInfo : %s"), *ItemName.ToString());
         return ItemInfoDataTable->FindRow<FItemInfo>(ItemName, FString(""));
     }
     else

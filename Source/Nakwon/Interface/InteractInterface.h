@@ -16,12 +16,13 @@ class UInteractInterface : public UInterface
 /**
  * 
  */
+class AMyCharacter;
 class NAKWON_API IInteractInterface
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void Interact(FName InteractionName) = 0;
+	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) = 0;
 	virtual void ShowInteractMenu() = 0;
 };

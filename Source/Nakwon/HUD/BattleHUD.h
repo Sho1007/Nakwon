@@ -10,15 +10,17 @@
  * 
  */
 class UInteractWidget;
+class UInteractMenuSlotWidget;
 UCLASS()
 class NAKWON_API ABattleHUD : public AHUD
 {
 	GENERATED_BODY()
 	
 public:
-	void ShowInteractMenu(FName ItemName);
+	FText GetSelectInteractText() const;
+	void ShowInteractMenu(const TArray<FText>& MenuTextArray, FText InteractActorName = FText());
 	void HideItemMenu();
-
+	void SelectMenu(float WheelValue);
 protected:
 	virtual void BeginPlay() override;
 

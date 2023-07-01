@@ -13,6 +13,7 @@ class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
+class UInventoryComponent;
 
 struct FInputActionValue;
 struct FItemInfo;
@@ -28,7 +29,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -37,7 +38,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Inherited via IInteractInterface
-	virtual void Interact(FName InteractionName) override;
+	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) override;
 	virtual void ShowInteractMenu() override;
 	void HideInteractMenu();
 private:
@@ -46,12 +47,20 @@ private:
 	// Action
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	void MenuSelect(const FInputActionValue& Value);
+
+	void DoInteract();
 private:
+	// Inventory
+	UPROPERTY(EditAnywhere, Meta = (AllowPrivateAccess = true))
+	UInventoryComponent* InventoryComponent;
+
 	// Interact
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	float CheckInteractLength;
 
-	IInteractInterface* CurrentInteractActor;
+	UPROPERTY(Replicated, Meta = (AllowPrivateAccess = true))
+	AActor* CurrentInteractActor;
 
 	// Input
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
@@ -60,6 +69,10 @@ private:
 	UInputAction* MoveAction;
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	UInputAction* LookAction;
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	UInputAction* MenuSelectAction;
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	UInputAction* InteractAction;
 
 	// Camera Component
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))

@@ -10,42 +10,45 @@
 
 #include "ItemBase.generated.h"
 
-UENUM(BlueprintType)
-enum class EItemAct : uint8
-{
-	NONE,
-	Equip,
-	USE,
-	TAKE,
-	EXAMINE,
-	SIZE,
-};
-
-class UTexture2D;
-UENUM(BlueprintType)
-enum class EItemType : uint8
-{
-	NONE,
-	EQUIPMENT,
-	CONSUMABLE,
-	INGREDIENT,
-	QUEST,
-	SIZE,
-};
-
 USTRUCT(BlueprintType)
 struct FItemInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
+	FItemInfo()
+		: ItemName(FText()), ItemType(EItemType::NONE), ItemImage(nullptr), MaxStack(0)
+	{
+	}
 	UPROPERTY(EditDefaultsOnly)
-	FName ItemName;
+	FText ItemName;
 	UPROPERTY(EditDefaultsOnly)
 	EItemType ItemType;
 	UPROPERTY(EditDefaultsOnly)
 	UTexture2D* ItemImage;
+	UPROPERTY(EditDefaultsOnly)
+	int32 MaxStack;
 };
 
+USTRUCT(BlueprintType)
+struct FItemInstance
+{
+	GENERATED_BODY()
+public:
+	FItemInstance()
+		: ItemRow(FName()), CurrentStack(0)
+	{
+	}
+	FItemInstance(FName NewItemRow, int32 NewCurrentStack = 0)
+		: ItemRow(NewItemRow), CurrentStack(NewCurrentStack)
+	{
+	}
+	UPROPERTY(EditAnywhere)
+	FName ItemRow;
+	UPROPERTY(EditAnywhere)
+	int32 CurrentStack;
+};
+
+class AMyCharacter;
 UCLASS()
 class NAKWON_API AItemBase : public AActor, public IInteractInterface
 {
@@ -65,9 +68,25 @@ public:
 
 
 	// Inherited via IInteractInterface
-	virtual void Interact(FName InteractionName) override;
+	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) override;
 	virtual void ShowInteractMenu() override;
+
+public:
+	// Getter / Setter
+	FName GetItemRow() const;
+
 private:
+	// Interact Action
+	virtual void UseItem();
+
+	virtual void TakeItem(AMyCharacter* InteractCharacter);
+	
+	virtual void ExamineItem();
+protected:
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	FName ItemRow;
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	FItemInfo ItemInfo;
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	TArray<FText> ItemMenuArray;
 };

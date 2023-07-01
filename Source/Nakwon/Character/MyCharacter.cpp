@@ -3,6 +3,7 @@
 
 #include "../Character/MyCharacter.h"
 
+#include "Net/UnrealNetwork.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
@@ -11,12 +12,13 @@
 #include "Camera/CameraComponent.h"
 
 #include "../HUD/BattleHUD.h"
+#include "../Component/InventoryComponent.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -33,13 +35,20 @@ AMyCharacter::AMyCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(FName(TEXT("InventoryComponent")));
 }
 
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	SetReplicates(true);
+	if (HasAuthority())
+	{
+		SetReplicates(true);
+		InventoryComponent->SetIsReplicated(true);
+	}
+	
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
@@ -50,11 +59,18 @@ void AMyCharacter::BeginPlay()
 	}
 }
 
+void AMyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AMyCharacter, CurrentInteractActor);
+}
+
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	CheckInteract();
 }
 
 // Called to bind functionality to input
@@ -66,6 +82,8 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	{
 		EIC->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyCharacter::Move);
 		EIC->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
+		EIC->BindAction(MenuSelectAction, ETriggerEvent::Started, this, &AMyCharacter::MenuSelect);
+		EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &AMyCharacter::DoInteract);
 	}
 }
 
@@ -83,14 +101,15 @@ void AMyCharacter::CheckInteract()
 			{
 				if (IInteractInterface* Interface = Cast<IInteractInterface>(HitResult.GetActor()))
 				{
-					if (CurrentInteractActor != Interface)
+					if (CurrentInteractActor != HitResult.GetActor())
 					{
 						if (CurrentInteractActor)
 						{
 							// Todo : Do Something before InteractActor
+							HideInteractMenu();
 						}
-						CurrentInteractActor = Interface;
-						CurrentInteractActor->ShowInteractMenu();
+						CurrentInteractActor = HitResult.GetActor();
+						Interface->ShowInteractMenu();
 					}
 					return;
 				}
@@ -129,8 +148,6 @@ void AMyCharacter::Move(const FInputActionValue& Value)
 
 		AddMovementInput(ForwardDirection, MovementVector.Y);
 		AddMovementInput(RightDirection, MovementVector.X);
-
-		CheckInteract();
 	}
 }
 
@@ -144,12 +161,40 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 	{
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(-LookAxisVector.Y);
-
-		CheckInteract();
 	}
 }
 
-void AMyCharacter::Interact(FName InteractionName)
+void AMyCharacter::MenuSelect(const FInputActionValue& Value)
+{
+	float WheelValue = Value.Get<float>();
+	if (CurrentInteractActor)
+	{
+		if (APlayerController* PC = GetController<APlayerController>())
+		{
+			if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+			{
+				HUD->SelectMenu(WheelValue);
+			}
+		}
+	}
+}
+
+void AMyCharacter::DoInteract()
+{
+	if (CurrentInteractActor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::DoInteract : %s"), *CurrentInteractActor->GetName());
+		if (APlayerController* PlayerControlelr = GetController<APlayerController>())
+		{
+			if (ABattleHUD* HUD = PlayerControlelr->GetHUD<ABattleHUD>())
+			{
+				Cast<IInteractInterface>(CurrentInteractActor)->Interact(this, HUD->GetSelectInteractText());
+			}
+		}
+	}
+}
+
+void AMyCharacter::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
 {
 }
 
