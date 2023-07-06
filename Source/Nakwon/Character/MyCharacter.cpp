@@ -10,12 +10,17 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
+
+// Ability
+#include "Abilities/CharacterAbilitySystemComponent.h"
+#include "Abilities/CharacterGameplayAbility.h"
 
 #include "../HUD/BattleHUD.h"
 #include "../Component/InventoryComponent.h"
 
 // Sets default values
-AMyCharacter::AMyCharacter()
+AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -37,6 +42,110 @@ AMyCharacter::AMyCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(FName(TEXT("InventoryComponent")));
+
+	// GAS
+
+	
+	/*GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
+
+	bAlwaysRelevant = true;
+
+	DeadTag = FGameplayTag::RequestGameplayTag(FName(TEXT("State.Dead")));
+	EffectRemoveOnDeathTag = FGameplayTag::RequestGameplayTag(FName(TEXT("State.RemoveOnDeath")));*/
+}
+
+void AMyCharacter::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
+{
+}
+
+void AMyCharacter::ShowInteractMenu()
+{
+	// Todo : Check Health StateComponent if dead show Interact Menu
+	//if ()
+	return;
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+		{
+		}
+	}
+}
+
+void AMyCharacter::HideInteractMenu()
+{
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+		{
+			HUD->HideItemMenu();
+		}
+	}
+}
+
+UAbilitySystemComponent* AMyCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent.Get();
+}
+
+float AMyCharacter::GetHealth() const
+{
+	return 0.0f;
+}
+
+float AMyCharacter::GetMaxHealth() const
+{
+	return 0.0f;
+}
+
+float AMyCharacter::GetMana() const
+{
+	return 0.0f;
+}
+
+float AMyCharacter::GetMaxMana() const
+{
+	return 0.0f;
+}
+
+bool AMyCharacter::IsAlive() const
+{
+	return GetHealth() > 0.0f;
+}
+
+int32 AMyCharacter::GetAbilityLevel(AbilityID ID) const
+{
+	return 1;
+}
+
+void AMyCharacter::RemoveCharacterAbilities()
+{
+	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || !AbilitySystemComponent->bCharacterAbilitiesGiven)
+	{
+		return;
+	}
+	TArray<FGameplayAbilitySpecHandle> AbilitiesToRemove;
+	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
+	{
+		if ((Spec.SourceObject == this) && CharacterAbilities.Contains(Spec.Ability->GetClass()))
+		{
+			AbilitiesToRemove.Add(Spec.Handle);
+		}
+	}
+
+	for (int32 i = 0; i < AbilitiesToRemove.Num(); ++i)
+	{
+		AbilitySystemComponent->ClearAbility(AbilitiesToRemove[i]);
+	}
+
+	AbilitySystemComponent->bCharacterAbilitiesGiven = false;
+}
+
+void AMyCharacter::Die()
+{
+}
+
+void AMyCharacter::FinishDying()
+{
 }
 
 // Called when the game starts or when spawned
@@ -48,7 +157,7 @@ void AMyCharacter::BeginPlay()
 		SetReplicates(true);
 		InventoryComponent->SetIsReplicated(true);
 	}
-	
+
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
@@ -114,20 +223,24 @@ void AMyCharacter::CheckInteract()
 					return;
 				}
 			}
-			
+
 		}
 	}
 	CurrentInteractActor = nullptr;
 	HideInteractMenu();
 }
 
-void AMyCharacter::HideInteractMenu()
+void AMyCharacter::DoInteract()
 {
-	if (APlayerController* PC = GetController<APlayerController>())
+	if (CurrentInteractActor)
 	{
-		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+		UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::DoInteract : %s"), *CurrentInteractActor->GetName());
+		if (APlayerController* PlayerControlelr = GetController<APlayerController>())
 		{
-			HUD->HideItemMenu();
+			if (ABattleHUD* HUD = PlayerControlelr->GetHUD<ABattleHUD>())
+			{
+				Cast<IInteractInterface>(CurrentInteractActor)->Interact(this, HUD->GetSelectInteractText());
+			}
 		}
 	}
 }
@@ -179,34 +292,22 @@ void AMyCharacter::MenuSelect(const FInputActionValue& Value)
 	}
 }
 
-void AMyCharacter::DoInteract()
-{
-	if (CurrentInteractActor)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::DoInteract : %s"), *CurrentInteractActor->GetName());
-		if (APlayerController* PlayerControlelr = GetController<APlayerController>())
-		{
-			if (ABattleHUD* HUD = PlayerControlelr->GetHUD<ABattleHUD>())
-			{
-				Cast<IInteractInterface>(CurrentInteractActor)->Interact(this, HUD->GetSelectInteractText());
-			}
-		}
-	}
-}
-
-void AMyCharacter::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
+void AMyCharacter::AddCharacterAbilities()
 {
 }
 
-void AMyCharacter::ShowInteractMenu()
+void AMyCharacter::InitializeAttributes()
 {
-	// Todo : Check Health StateComponent if dead show Interact Menu
-	//if ()
-	return;
-	if (APlayerController* PC = GetController<APlayerController>())
-	{
-		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
-		{
-		}
-	}
+}
+
+void AMyCharacter::AddStartupEffects()
+{
+}
+
+void AMyCharacter::SetHealth(float Health)
+{
+}
+
+void AMyCharacter::SetMana(float Mana)
+{
 }
