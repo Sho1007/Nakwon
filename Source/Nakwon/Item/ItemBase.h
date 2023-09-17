@@ -5,8 +5,9 @@
 #include "../Nakwon.h"
 #include "GameFramework/Actor.h"
 
+#include <Engine/DataTable.h>
+#include <Misc/Guid.h>
 #include "../Interface/InteractInterface.h"
-#include "Engine/DataTable.h"
 
 #include "ItemBase.generated.h"
 
@@ -16,36 +17,37 @@ struct FItemInfo : public FTableRowBase
 	GENERATED_BODY()
 public:
 	FItemInfo()
-		: ItemName(FText()), ItemType(EItemType::NONE), ItemImage(nullptr), MaxStack(0)
+		: Name(FText()), Class(nullptr), Type(EItemType::NONE), Image(nullptr), Width(0), Height(0)
 	{
 	}
 	UPROPERTY(EditDefaultsOnly)
-	FText ItemName;
+	FText Name;
 	UPROPERTY(EditDefaultsOnly)
-	EItemType ItemType;
+	TSubclassOf<AItemBase> Class;
 	UPROPERTY(EditDefaultsOnly)
-	UTexture2D* ItemImage;
+	EItemType Type;
 	UPROPERTY(EditDefaultsOnly)
-	int32 MaxStack;
+	UTexture2D* Image;
+	UPROPERTY(EditDefaultsOnly)
+	uint32 Width;
+	UPROPERTY(EditDefaultsOnly)
+	uint32 Height;
+	UPROPERTY(EditDefaultsOnly)
+	uint32 MaxStack;
 };
-
 USTRUCT(BlueprintType)
-struct FItemInstance
+struct FItemInstance : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
-	FItemInstance()
-		: ItemRow(FName()), CurrentStack(0)
-	{
-	}
-	FItemInstance(FName NewItemRow, int32 NewCurrentStack = 0)
-		: ItemRow(NewItemRow), CurrentStack(NewCurrentStack)
-	{
-	}
-	UPROPERTY(EditAnywhere)
+	FItemInstance() {}
+
+	UPROPERTY(EditDefaultsOnly)
+	FGuid Guid;
+	UPROPERTY(EditDefaultsOnly)
 	FName ItemRow;
-	UPROPERTY(EditAnywhere)
-	int32 CurrentStack;
+	UPROPERTY(EditDefaultsOnly)
+	uint32 CurrentStack;
 };
 
 class AMyCharacter;
@@ -71,11 +73,15 @@ public:
 	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) override;
 	virtual void ShowInteractMenu() override;
 
+	// DataBase
+	virtual void LoadData(FItemInfo* ItemInfo, FItemInstance* ItemInstance);
+
 public:
 	// Getter / Setter
 	FName GetItemRow() const;
+	FItemInstance GetItemInstance() const;
 
-private:
+protected:
 	// Interact Action
 	virtual void UseItem();
 
@@ -83,10 +89,25 @@ private:
 	
 	virtual void ExamineItem();
 protected:
-	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
-	FName ItemRow;
-	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
-	FItemInfo ItemInfo;
-	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
-	TArray<FText> ItemMenuArray;
+	FGuid Guid;
+
+	// Item Info
+	UPROPERTY(EditDefaultsOnly)
+	FText Name;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<AItemBase> Class;
+	UPROPERTY(EditDefaultsOnly)
+	EItemType Type;
+	UPROPERTY(EditDefaultsOnly)
+	UTexture2D* Image;
+	UPROPERTY(EditDefaultsOnly)
+	uint32 Width;
+	UPROPERTY(EditDefaultsOnly)
+	uint32 Height;
+	UPROPERTY(EditDefaultsOnly)
+	uint32 MaxStack;
+
+	// Instance Info
+	UPROPERTY(EditDefaultsOnly)
+	uint32 CurrentStack;
 };

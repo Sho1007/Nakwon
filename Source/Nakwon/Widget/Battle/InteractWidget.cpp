@@ -67,6 +67,11 @@ void UInteractWidget::SelectMenu(float WheelValue)
 
 FText UInteractWidget::GetSelectInteractText() const
 {
+	if (VB_Menu->GetChildrenCount() >= FocusMenuNum)
+	{
+		UE_LOG(LogTemp, Error, TEXT("UInteractWidget::GetSelectInteractText : Invalid Index"));
+		return FText();
+	}
 	return Cast<UInteractMenuSlotWidget>(VB_Menu->GetChildAt(FocusMenuNum))->GetText();
 }
 

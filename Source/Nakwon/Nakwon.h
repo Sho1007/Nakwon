@@ -33,5 +33,18 @@ enum class EItemType : uint8
 	CONSUMABLE,
 	INGREDIENT,
 	QUEST,
+	WEAPONPARTS,
 	SIZE,
+};
+
+UENUM(BlueprintType)
+enum class EEquipmentType : uint8
+{
+	HEADGEAR,
+	ARMOR,
+	WEAPON,
+	RIG,
+	BACKPACK,
+	POUCH,
+	SIZE                                                      
 };

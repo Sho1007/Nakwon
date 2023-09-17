@@ -15,9 +15,13 @@
 // Ability
 #include "Abilities/CharacterAbilitySystemComponent.h"
 #include "Abilities/CharacterGameplayAbility.h"
+#include "Abilities/AttributeSets/CharacterAttributeSetBase.h"
 
 #include "../HUD/BattleHUD.h"
 #include "../Component/InventoryComponent.h"
+
+// Zone
+#include "../Actor/Wayout.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer)
@@ -33,7 +37,8 @@ AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer)
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->SetupAttachment(GetMesh(), TEXT("head"));
+
 	CameraBoom->TargetArmLength = 400.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 
@@ -41,17 +46,9 @@ AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer)
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
+	//CameraBoom->AttachToComponent();
+
 	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(FName(TEXT("InventoryComponent")));
-
-	// GAS
-
-	
-	/*GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Overlap);
-
-	bAlwaysRelevant = true;
-
-	DeadTag = FGameplayTag::RequestGameplayTag(FName(TEXT("State.Dead")));
-	EffectRemoveOnDeathTag = FGameplayTag::RequestGameplayTag(FName(TEXT("State.RemoveOnDeath")));*/
 }
 
 void AMyCharacter::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
@@ -82,82 +79,16 @@ void AMyCharacter::HideInteractMenu()
 	}
 }
 
-UAbilitySystemComponent* AMyCharacter::GetAbilitySystemComponent() const
-{
-	return AbilitySystemComponent.Get();
-}
-
-float AMyCharacter::GetHealth() const
-{
-	return 0.0f;
-}
-
-float AMyCharacter::GetMaxHealth() const
-{
-	return 0.0f;
-}
-
-float AMyCharacter::GetMana() const
-{
-	return 0.0f;
-}
-
-float AMyCharacter::GetMaxMana() const
-{
-	return 0.0f;
-}
-
-bool AMyCharacter::IsAlive() const
-{
-	return GetHealth() > 0.0f;
-}
-
-int32 AMyCharacter::GetAbilityLevel(AbilityID ID) const
-{
-	return 1;
-}
-
-void AMyCharacter::RemoveCharacterAbilities()
-{
-	if (GetLocalRole() != ROLE_Authority || !AbilitySystemComponent.IsValid() || !AbilitySystemComponent->bCharacterAbilitiesGiven)
-	{
-		return;
-	}
-	TArray<FGameplayAbilitySpecHandle> AbilitiesToRemove;
-	for (const FGameplayAbilitySpec& Spec : AbilitySystemComponent->GetActivatableAbilities())
-	{
-		if ((Spec.SourceObject == this) && CharacterAbilities.Contains(Spec.Ability->GetClass()))
-		{
-			AbilitiesToRemove.Add(Spec.Handle);
-		}
-	}
-
-	for (int32 i = 0; i < AbilitiesToRemove.Num(); ++i)
-	{
-		AbilitySystemComponent->ClearAbility(AbilitiesToRemove[i]);
-	}
-
-	AbilitySystemComponent->bCharacterAbilitiesGiven = false;
-}
-
-void AMyCharacter::Die()
-{
-}
-
-void AMyCharacter::FinishDying()
-{
-}
-
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
 	if (HasAuthority())
 	{
 		SetReplicates(true);
 		InventoryComponent->SetIsReplicated(true);
 	}
-
 
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
@@ -165,6 +96,8 @@ void AMyCharacter::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultContext, 0);
 		}
+
+		//DisableInput(GetController<APlayerController>());
 	}
 }
 
@@ -180,6 +113,19 @@ void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	CheckInteract();
+
+	// Escape
+	if (bCanEscape)
+	{
+		CurrentEscapeTime += DeltaTime;
+		if (CurrentEscapeTime > MaxEscapeTime)
+		{
+			bCanEscape = false;
+			// Todo : Escape
+			UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Tick : %s Escaped"), *GetName());
+			this->GetController<APlayerController>()->ClientTravel(FString::Printf(TEXT("/Game/Levels/L_MainMenu")), TRAVEL_Relative, true);
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -193,6 +139,55 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 		EIC->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyCharacter::Look);
 		EIC->BindAction(MenuSelectAction, ETriggerEvent::Started, this, &AMyCharacter::MenuSelect);
 		EIC->BindAction(InteractAction, ETriggerEvent::Started, this, &AMyCharacter::DoInteract);
+		EIC->BindAction(InGameMenuAction, ETriggerEvent::Started, this, &AMyCharacter::ToggleInGameMenu);
+		EIC->BindAction(AimAction, ETriggerEvent::Started, this, &AMyCharacter::Aim);
+	}
+}
+
+void AMyCharacter::EnterZone(FName ZoneName)
+{
+	ZoneList.Add(ZoneName);
+}
+
+void AMyCharacter::LeaveZone(FName ZoneName)
+{
+	ZoneList.Remove(ZoneName);
+}
+
+void AMyCharacter::Escape(AWayout* Wayout, float NewEscapeTime)
+{
+	if (SpawnPoint)
+	{
+		TArray<AWayout*> DestinationArray = SpawnPoint->GetDestinationArray();
+		for (AWayout* Destination : DestinationArray)
+		{
+			if (Destination == Wayout)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Escape : Start To Escape"));
+				EscapeWayout = Wayout;
+				MaxEscapeTime = NewEscapeTime;
+				CurrentEscapeTime = 0.0f;
+				bCanEscape = true;
+				// Todo :
+				// 1. 로딩 바 띄우기
+				// 2. 로딩 다 되면 탈출 시키기
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("AMyCharacter::Escape : Invalid SpawnPoint"));
+	}
+}
+
+void AMyCharacter::StopEscape(AWayout* Wayout)
+{
+	if (EscapeWayout && EscapeWayout == Wayout)
+	{
+		EscapeWayout = nullptr;
+		bCanEscape = false;
+		// Todo :
+		// 1. 로딩 바 지우기
 	}
 }
 
@@ -292,22 +287,19 @@ void AMyCharacter::MenuSelect(const FInputActionValue& Value)
 	}
 }
 
-void AMyCharacter::AddCharacterAbilities()
+void AMyCharacter::ToggleInGameMenu(const FInputActionValue& Value)
 {
+	if (APlayerController* PC = GetController<APlayerController>())
+	{
+		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+		{
+			HUD->ToggleInGameMenu();
+		}
+	}
 }
 
-void AMyCharacter::InitializeAttributes()
+void AMyCharacter::Aim(const FInputActionValue& Value)
 {
-}
-
-void AMyCharacter::AddStartupEffects()
-{
-}
-
-void AMyCharacter::SetHealth(float Health)
-{
-}
-
-void AMyCharacter::SetMana(float Mana)
-{
+	if (bIsAimed) bIsAimed = false;
+	else bIsAimed = true;
 }

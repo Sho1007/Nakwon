@@ -9,23 +9,39 @@
 /**
  * 
  */
+class UInGameMenuWidget;
 class UInteractWidget;
-class UInteractMenuSlotWidget;
+
+// Weapon Modify Test
+class UMaterialInstanceDynamic;
 UCLASS()
 class NAKWON_API ABattleHUD : public AHUD
 {
 	GENERATED_BODY()
 	
 public:
+	// Interact Widget
 	FText GetSelectInteractText() const;
 	void ShowInteractMenu(const TArray<FText>& MenuTextArray, FText InteractActorName = FText());
 	void HideItemMenu();
 	void SelectMenu(float WheelValue);
+
+	// InGameMenu Widget
+	void ToggleInGameMenu();
+
+	// Weapon Modify Test
+	void SetRenderTarget(UMaterialInstanceDynamic* NewMaterial);
 protected:
 	virtual void BeginPlay() override;
 
 private:
+	// Interact Widget
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	TSubclassOf<UInteractWidget> InteractWidgetClass;
 	UInteractWidget* InteractWidget;
+
+	// InGameMenu Widget
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
+	TSubclassOf<UInGameMenuWidget> InGameMenuWidgetClass;
+	UInGameMenuWidget* InGameMenuWidget;
 };

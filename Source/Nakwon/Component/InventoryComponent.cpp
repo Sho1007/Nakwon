@@ -21,26 +21,36 @@ void UInventoryComponent::TakeItem_Implementation(AItemBase* TargetItem)
 {
 	FName NewItemRow = TargetItem->GetItemRow();
 	UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent::TakeItem : %s"), *NewItemRow.ToString());
-	if (FItemInfo* ItemInfo = GetWorld()->GetGameInstance<UMyGameInstance>()->FindItemInfo(NewItemRow))
-	{
-		bool isAdded = false;
-		for (int i = 0; i < ItemArray.Num(); ++i)
-		{
-			if (ItemArray[i].ItemRow == NewItemRow)
-			{
-				if (ItemArray[i].CurrentStack + 1 <= ItemInfo->MaxStack)
-				{
-					ItemArray[i].CurrentStack++;
-					return;
-				}
-			}
-		}
-
-		ItemArray.Add(FItemInstance(NewItemRow, 1));
-		TargetItem->Destroy();
-	}
+	//if (FItemInfo* ItemInfo = GetWorld()->GetGameInstance<UMyGameInstance>()->FindItemInfo(NewItemRow))
+	//{
+	//	for (int i = 0; i < ItemArray.Num(); ++i)
+	//	{
+	//		if (ItemArray[i].ItemRow == NewItemRow)
+	//		{ 
+	//			if (ItemArray[i].IntMap[TEXT("CurrentStack")] + 1 <= ItemInfo->IntMap[TEXT("MaxStack")])
+	//			{
+	//				// Check Is Valid (Check Other Take That Item)
+	//				if (IsValid(TargetItem)) TargetItem->Destroy();
+	//				ItemArray[i].IntMap[TEXT("CurrentStack")]++;
+	//				return;
+	//			}
+	//		}
+	//	}
+	//	ItemArray.Add(TargetItem->GetItemInstance());
+	//	TargetItem->Destroy();
+	//}
 }
 
+void UInventoryComponent::EquipItem_Implementation(AItemBase* TargetItem)
+{
+	FItemInstance ItemInstance = TargetItem->GetItemInstance();
+
+	FName NewItemRow = TargetItem->GetItemRow();
+	UE_LOG(LogTemp, Warning, TEXT("UInventoryComponent::TakeItem : %s"), *NewItemRow.ToString());
+	if (FItemInfo* ItemInfo = GetWorld()->GetGameInstance<UMyGameInstance>()->FindItemInfo(NewItemRow))
+	{
+	}
+}
 
 // Called when the game starts
 void UInventoryComponent::BeginPlay()
