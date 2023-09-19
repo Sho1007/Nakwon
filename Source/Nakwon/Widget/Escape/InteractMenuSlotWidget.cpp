@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "../Battle/InteractMenuSlotWidget.h"
+#include "../Escape/InteractMenuSlotWidget.h"
 
 #include "Components/TextBlock.h"
 #include "Components/Border.h"

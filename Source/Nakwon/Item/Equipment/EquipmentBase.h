@@ -21,24 +21,14 @@ public:
 	uint32 MaxDurability;
 };
 
-USTRUCT(BlueprintType)
-struct FEquipmentInstance : public FTableRowBase
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditDefaultsOnly)
-	uint32 CurrentDurability;
-};
-
 UCLASS()
 class NAKWON_API AEquipmentBase : public AItemBase
 {
 	GENERATED_BODY()
-	
-public:
-	virtual void LoadData(FItemInfo* ItemInfo, FItemInstance* ItemInstance);
 
+public:
+	virtual void CreateInstance() override;
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	EEquipmentType EquipmentType;
+	UPROPERTY(EditAnywhere)
+	FEquipmentInfo EquipmentInfo;
 };

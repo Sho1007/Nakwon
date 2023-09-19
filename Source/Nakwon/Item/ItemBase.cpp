@@ -3,8 +3,8 @@
 
 #include "../Item/ItemBase.h"
 
-#include "../HUD/BattleHUD.h"
 #include "../Character/MyCharacter.h"
+#include "../PlayerController/EscapePlayerController.h"
 #include "../Component/InventoryComponent.h"
 #include "../GameInstance/MyGameInstance.h"
 
@@ -23,8 +23,8 @@ void AItemBase::BeginPlay()
 	{
 		SetReplicates(true);
 	}
-	Guid = FGuid::NewGuid();
-	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("GUID : %s"), *Guid.ToString()));
+	ItemInstance.Guid = FGuid::NewGuid();
+	//if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Red, FString::Printf(TEXT("GUID : %s"), *ItemInstance.Guid.ToString()));
 }
 
 // Called every frame
@@ -37,25 +37,51 @@ void AItemBase::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
 {
 	UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact : %s"), *InteractionName.ToString());
 
-	//if (InteractionName.CompareTo(ItemMenuArray[0]) == 0)
-	//{
-	//	//UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact Use"));
-	//	UseItem();
-	//}
-	//else if (InteractionName.CompareTo(ItemMenuArray[1]) == 0)
-	//{
-	//	//UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact Take"));
-	//	TakeItem(InteractCharacter);
-	//}
-	//else if (InteractionName.CompareTo(ItemMenuArray[2]) == 0)
-	//{
-	//	//UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact Examine"));
-	//	ExamineItem();
-	//}
+	if (InteractionName.CompareTo(FText::FromName(TEXT("Use"))) == 0)
+	{
+		
+		UseItem();
+	}
+	else if (InteractionName.CompareTo(FText::FromName(TEXT("Take"))) == 0)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact Take"));
+		TakeItem(InteractCharacter);
+	}
+	else if (InteractionName.CompareTo(FText::FromName(TEXT("Examine"))) == 0)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact Examine"));
+		ExamineItem();
+	}
 }
 
-void AItemBase::ShowInteractMenu()
+void AItemBase::ShowInteractMenu(AMyCharacter* InteractCharacter)
 {
+	UE_LOG(LogTemp, Warning, TEXT("AItemBase::ShowInteractMenu"));
+	if (AEscapePlayerController* PC = InteractCharacter->GetController<AEscapePlayerController>())
+	{
+		// Todo : If player Doesn't know this item, Add Exmaine
+		TArray<FText> NewMenuTextArray;
+		NewMenuTextArray.Add(FText::FromName(TEXT("Take")));
+		if (InteractCharacter->CheckKnowItem(ItemInstance.ItemRow))
+		{
+			for (FText Text : MenuTextArray)
+			{
+				NewMenuTextArray.Add(Text);
+			}
+		}
+		else
+		{
+			NewMenuTextArray.Add(FText::FromName(TEXT("Examine")));
+		}
+		
+		InteractCharacter->SetMenuTextArray(NewMenuTextArray);
+
+		if (PC->HasAuthority() && PC->IsLocalController()) PC->ShowInteractMenu();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("AItemBase::ShowInteractMenu : Invalid PlayerController Class"));
+	}
 	/*if (ABattleHUD* HUD = GetWorld()->GetFirstPlayerController()->GetHUD<ABattleHUD>())
 	{
 		if (FItemInfo* ItemInfo = GetGameInstance<UMyGameInstance>()->FindItemInfo(ItemInstance.ItemRow))
@@ -65,38 +91,40 @@ void AItemBase::ShowInteractMenu()
 	}*/
 }
 
-void AItemBase::LoadData(FItemInfo* ItemInfo, FItemInstance* ItemInstance)
+void AItemBase::LoadData(FItemInstance* NewItemInstance)
 {
-	this->Guid = ItemInstance->Guid;
-	this->CurrentStack = ItemInstance->CurrentStack;
+	ItemInstance = *NewItemInstance;
+}
 
-	this->Name = ItemInfo->Name;
-	this->Class = ItemInfo->Class;
-	this->Type = ItemInfo->Type;
-	this->Image = ItemInfo->Image;
-	this->Width = ItemInfo->Width;
-	this->Height = ItemInfo->Height;
-	this->MaxStack = ItemInfo->MaxStack;
+void AItemBase::CreateInstance()
+{
+	ItemInstance.Guid = FGuid::NewGuid();
+	ItemInstance.IntMap.Emplace(TEXT("CurrentStack"), 1);
 }
 
 FName AItemBase::GetItemRow() const
 {
-	//return ItemInstance.ItemRow;
-	return FName();
+	return ItemInstance.ItemRow;
 }
 
 FItemInstance AItemBase::GetItemInstance() const
 {
-	//return ItemInstance;
-	return FItemInstance();
+	return ItemInstance;
 }
 
-void AItemBase::UseItem()
+FText AItemBase::GetItemName() const
 {
+	return ItemInfo.Name;
 }
 
-void AItemBase::TakeItem(AMyCharacter* InteractCharacter)
+void AItemBase::UseItem_Implementation()
 {
+	UE_LOG(LogTemp, Warning, TEXT("AItemBase::UseItem : %s"), *this->GetName());
+}
+
+void AItemBase::TakeItem_Implementation(AMyCharacter* InteractCharacter)
+{
+	UE_LOG(LogTemp, Warning, TEXT("AItemBase::TakeItem : %s to %s"), *this->GetName(), *InteractCharacter->GetName());
 	if (UInventoryComponent* InventoryComponent = Cast<UInventoryComponent>(InteractCharacter->FindComponentByClass(UInventoryComponent::StaticClass())))
 	{
 		InventoryComponent->TakeItem(this);
@@ -107,6 +135,7 @@ void AItemBase::TakeItem(AMyCharacter* InteractCharacter)
 	}
 }
 
-void AItemBase::ExamineItem()
+void AItemBase::ExamineItem_Implementation()
 {
+	UE_LOG(LogTemp, Warning, TEXT("AItemBase::ExamineItem : %s"), *this->GetName());
 }

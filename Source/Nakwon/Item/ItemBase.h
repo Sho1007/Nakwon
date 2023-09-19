@@ -11,6 +11,7 @@
 
 #include "ItemBase.generated.h"
 
+// Inventory에 존재하면, 표현하기 위한 구조체
 USTRUCT(BlueprintType)
 struct FItemInfo : public FTableRowBase
 {
@@ -47,7 +48,11 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	FName ItemRow;
 	UPROPERTY(EditDefaultsOnly)
-	uint32 CurrentStack;
+	TMap<FName, int32> IntMap;
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FName, float> FloatMap;
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FGuid> ChildArray;
 };
 
 class AMyCharacter;
@@ -71,43 +76,40 @@ public:
 
 	// Inherited via IInteractInterface
 	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) override;
-	virtual void ShowInteractMenu() override;
+	virtual void ShowInteractMenu(AMyCharacter* InteractCharacter) override;
 
 	// DataBase
-	virtual void LoadData(FItemInfo* ItemInfo, FItemInstance* ItemInstance);
+	virtual void LoadData(FItemInstance* ItemInstance);
+	virtual void CreateInstance();
 
 public:
 	// Getter / Setter
 	FName GetItemRow() const;
 	FItemInstance GetItemInstance() const;
+	FText GetItemName() const;
 
 protected:
 	// Interact Action
+	UFUNCTION(Server, Reliable)
 	virtual void UseItem();
+	virtual void UseItem_Implementation();
 
+	UFUNCTION(Server, Reliable)
 	virtual void TakeItem(AMyCharacter* InteractCharacter);
-	
-	virtual void ExamineItem();
-protected:
-	FGuid Guid;
+	virtual void TakeItem_Implementation(AMyCharacter* InteractCharacter);
 
+	UFUNCTION(Server, Reliable)
+	virtual void ExamineItem();
+	virtual void ExamineItem_Implementation();
+protected:
 	// Item Info
 	UPROPERTY(EditDefaultsOnly)
-	FText Name;
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AItemBase> Class;
-	UPROPERTY(EditDefaultsOnly)
-	EItemType Type;
-	UPROPERTY(EditDefaultsOnly)
-	UTexture2D* Image;
-	UPROPERTY(EditDefaultsOnly)
-	uint32 Width;
-	UPROPERTY(EditDefaultsOnly)
-	uint32 Height;
-	UPROPERTY(EditDefaultsOnly)
-	uint32 MaxStack;
+	FItemInfo ItemInfo;
 
-	// Instance Info
 	UPROPERTY(EditDefaultsOnly)
-	uint32 CurrentStack;
+	TArray<FText> MenuTextArray;
+
+	// Item Instance
+	UPROPERTY(EditDefaultsOnly)
+	FItemInstance ItemInstance;
 };

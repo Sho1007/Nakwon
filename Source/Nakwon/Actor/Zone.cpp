@@ -46,6 +46,8 @@ void AZone::LeavePlayer(AMyCharacter* EnteredPlayer)
 
 void AZone::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (HasAuthority() == false) return;
+	if (!OtherActor->IsValidLowLevelFast()) return;
 	if (AMyCharacter* Character = Cast<AMyCharacter>(OtherActor))
 	{
 		EnterPlayer(Character);
@@ -54,6 +56,8 @@ void AZone::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 void AZone::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	if (HasAuthority() == false) return;
+	if (!OtherActor->IsValidLowLevelFast()) return;
 	if (OtherActor)
 	{
 		if (AMyCharacter* Character = Cast<AMyCharacter>(OtherActor))

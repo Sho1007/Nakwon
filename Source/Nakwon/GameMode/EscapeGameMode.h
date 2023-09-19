@@ -9,6 +9,7 @@
 /**
  * 
  */
+class AWayout;
 class AMyCharacter;
 UCLASS()
 class NAKWON_API AEscapeGameMode : public AGameModeBase
@@ -16,5 +17,9 @@ class NAKWON_API AEscapeGameMode : public AGameModeBase
 	GENERATED_BODY()
 	
 public:
+	virtual void BeginPlay() override;
 	void SetSpawnPoint(AMyCharacter* Character);
+
+private:
+	TArray<AWayout*> WayoutArray;
 };

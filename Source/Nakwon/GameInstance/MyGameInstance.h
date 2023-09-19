@@ -16,7 +16,6 @@ class UMySaveGame;
 struct FItemInfo;
 struct FItemInstance;
 struct FEquipmentInfo;
-struct FEquipmentInstance;
 UCLASS()
 class NAKWON_API UMyGameInstance : public UGameInstance
 {
@@ -27,7 +26,6 @@ public:
 	FItemInstance* FindItemInstance(FName Guid);
 	
 	FEquipmentInfo* FindEquipmentInfo(FName ItemName);
-	FEquipmentInstance* FindEquipmentInstance(FName Guid);
 
 	// SaveGame
 	void LoadGameAsync();
@@ -50,6 +48,4 @@ private:
 	UDataTable* ItemInstanceDataTable;
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	UDataTable* EquipmentInfoDataTable;
-	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
-	UDataTable* EquipmentInstanceDataTable;
 };

@@ -9,9 +9,38 @@
 /**
  * 
  */
+class UEscapeWidget;
 UCLASS()
 class NAKWON_API AEscapePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void BeginPlay() override;
+
+	UFUNCTION(Server, Reliable)
+	void SetSpawnPoint();
+	void SetSpawnPoint_Implementation();
+
+
+	// Widget
+	UFUNCTION(Client, Reliable)
+	void ShowEscapeProgress();
+	void ShowEscapeProgress_Implementation();
+	
+	UFUNCTION(Client, Reliable)
+	void HideEscapeProgress();
+	void HideEscapeProgress_Implementation();
+
+	void ShowInteractMenu();
+	void HideInteractMenu();
+	
+	void SelectMenu();
+	
+	FText GetSelectedInteractText();
+
+private:
+	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess))
+	TSubclassOf<UEscapeWidget> EscapeWidgetClass;
+	UEscapeWidget* EscapeWidget;
 };

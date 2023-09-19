@@ -23,7 +23,7 @@ public:
 	void InitWidget();
 	void ShowInteractMenu(const TArray<FText>& MenuTextArray, FText InteractActorName = FText());
 	void HideInteractMenu();
-	void SelectMenu(float WheelValue);
+	void SelectMenu();
 
 	FText GetSelectInteractText() const;
 private:

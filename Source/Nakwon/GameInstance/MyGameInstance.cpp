@@ -47,20 +47,6 @@ FEquipmentInfo* UMyGameInstance::FindEquipmentInfo(FName ItemName)
 	return nullptr;
 }
 
-FEquipmentInstance* UMyGameInstance::FindEquipmentInstance(FName Guid)
-{
-	if (EquipmentInstanceDataTable)
-	{
-		return EquipmentInstanceDataTable->FindRow<FEquipmentInstance>(Guid, FString(""));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("EquipmentInstanceDataTable is NULL"));
-	}
-
-	return nullptr;
-}
-
 void UMyGameInstance::LoadGameAsync()
 {
 	FAsyncLoadGameFromSlotDelegate LoadedDelegate;

@@ -3,7 +3,9 @@
 
 #include "../Equipment/EquipmentBase.h"
 
-void AEquipmentBase::LoadData(FItemInfo* ItemInfo, FItemInstance* ItemInstance)
+void AEquipmentBase::CreateInstance()
 {
-	Super::LoadData(ItemInfo, ItemInstance);
+	Super::CreateInstance();
+	
+	ItemInstance.IntMap.Emplace(TEXT("CurrentDurability"), EquipmentInfo.MaxDurability);
 }

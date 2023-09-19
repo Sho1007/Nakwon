@@ -6,20 +6,24 @@
 #include <Kismet/KismetRenderingLibrary.h>
 #include <Kismet/KismetMaterialLibrary.h>
 
-#include "../../../HUD/BattleHUD.h"
 #include "../../IconMaker.h"
 #include "../../WeaponParts/WeaponPartsBase.h"
 #include "../../WeaponParts/TestWeaponParts.h"
 #include "../../WeaponParts/TEST_SMC.h"
+#include "../../../Widget/Escape/EscapeWidget.h"
+
+
 
 void AWeaponBase::SetRenderTarget()
 {
 	if (ParentMaterial->IsValidLowLevelFast())
 	{
-		WeaponImageRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this, Width * 32, Height * 32);
+		WeaponImageRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this, ItemInfo.Width * 32, ItemInfo.Height * 32);
 		WeaponImageMaterial = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, ParentMaterial);
 		WeaponImageMaterial->SetTextureParameterValue(TEXT("FinalColorTexture"), WeaponImageRenderTarget);
-		GetWorld()->GetFirstPlayerController()->GetHUD<ABattleHUD>()->SetRenderTarget(WeaponImageMaterial);
+
+		// Todo :
+		//GetWorld()->GetFirstPlayerController()->GetHUD<AEscapeHUD>()->GetEscapeWidget()->SetRenderTarget(WeaponImageMaterial);
 	}
 	else
 	{

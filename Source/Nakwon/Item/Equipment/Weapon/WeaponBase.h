@@ -43,10 +43,14 @@ private:
 	TArray<AWeaponPartsBase*> WeaponPartsArray;
 	UPROPERTY(EditInstanceOnly, Meta = (AllowPrivateAccess))
 	TSubclassOf<AWeaponPartsBase> WeaponPartsClass;
+
+
+	// Test : Dynamic Weapon Image (When Add / Remove WeaponParts)
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess))
 	FRotator CaptureRotation;
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess))
 	FVector CaptureLocation;
+
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess))
 	UMaterialInterface* ParentMaterial;
 	UPROPERTY(EditInstanceOnly, Meta = (AllowPrivateAccess))

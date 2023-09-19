@@ -17,11 +17,14 @@
 #include "Abilities/CharacterGameplayAbility.h"
 #include "Abilities/AttributeSets/CharacterAttributeSetBase.h"
 
-#include "../HUD/BattleHUD.h"
 #include "../Component/InventoryComponent.h"
+#include "../Widget/Escape/EscapeWidget.h"
 
 // Zone
 #include "../Actor/Wayout.h"
+
+// PlayerController
+#include "../PlayerController/EscapePlayerController.h"
 
 // Sets default values
 AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer)
@@ -55,49 +58,41 @@ void AMyCharacter::Interact(AMyCharacter* InteractCharacter, FText InteractionNa
 {
 }
 
-void AMyCharacter::ShowInteractMenu()
+void AMyCharacter::ShowInteractMenu(AMyCharacter* InteractCharacter)
 {
 	// Todo : Check Health StateComponent if dead show Interact Menu
 	//if ()
 	return;
-	if (APlayerController* PC = GetController<APlayerController>())
-	{
-		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
-		{
-		}
-	}
 }
 
-void AMyCharacter::HideInteractMenu()
+bool AMyCharacter::CheckKnowItem(FName ItemName)
 {
-	if (APlayerController* PC = GetController<APlayerController>())
-	{
-		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
-		{
-			HUD->HideItemMenu();
-		}
-	}
+	return KnownItemArray.Find(ItemName) != INDEX_NONE;
 }
 
 // Called when the game starts or when spawned
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::BeginPlay : %s"), *GetName());
 
 	if (HasAuthority())
 	{
 		SetReplicates(true);
 		InventoryComponent->SetIsReplicated(true);
+		
 	}
 
-	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	if (IsLocallyControlled())
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
+		if (AEscapePlayerController* EscapePC = GetController<AEscapePlayerController>())
 		{
-			Subsystem->AddMappingContext(DefaultContext, 0);
+			EscapePC->SetSpawnPoint();
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(EscapePC->GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(DefaultContext, 0);
+			}
 		}
-
-		//DisableInput(GetController<APlayerController>());
 	}
 }
 
@@ -106,24 +101,34 @@ void AMyCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AMyCharacter, CurrentInteractActor);
+	DOREPLIFETIME(AMyCharacter, EscapeTime);
+	DOREPLIFETIME(AMyCharacter, MenuTextArray);
+	DOREPLIFETIME(AMyCharacter, bIsStopBreath);
+	DOREPLIFETIME(AMyCharacter, bIsAimed);
+	DOREPLIFETIME(AMyCharacter, InteractMenuIndex);
 }
 
 // Called every frame
 void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (HasAuthority() == false) return;
+
+	//UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Tick"));
 	CheckInteract();
 
 	// Escape
 	if (bCanEscape)
 	{
-		CurrentEscapeTime += DeltaTime;
-		if (CurrentEscapeTime > MaxEscapeTime)
+		EscapeTime -= DeltaTime;
+		if (IsLocallyControlled()) EscapeTimeDelegate.ExecuteIfBound(EscapeTime);
+		if (EscapeTime <= 0)
 		{
 			bCanEscape = false;
 			// Todo : Escape
 			UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Tick : %s Escaped"), *GetName());
-			this->GetController<APlayerController>()->ClientTravel(FString::Printf(TEXT("/Game/Levels/L_MainMenu")), TRAVEL_Relative, true);
+			this->GetController<APlayerController>()->ClientTravel(FString::Printf(TEXT("/Game/Levels/L_MainMenu")), ETravelType::TRAVEL_Absolute);
 		}
 	}
 }
@@ -165,9 +170,14 @@ void AMyCharacter::Escape(AWayout* Wayout, float NewEscapeTime)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Escape : Start To Escape"));
 				EscapeWayout = Wayout;
-				MaxEscapeTime = NewEscapeTime;
-				CurrentEscapeTime = 0.0f;
+				EscapeTime = NewEscapeTime;
+				EscapeTimeDelegate.ExecuteIfBound(EscapeTime);
 				bCanEscape = true;
+
+				if (AEscapePlayerController* PC = GetController<AEscapePlayerController>())
+				{
+					PC->ShowEscapeProgress();
+				}
 				// Todo :
 				// 1. 로딩 바 띄우기
 				// 2. 로딩 다 되면 탈출 시키기
@@ -186,20 +196,52 @@ void AMyCharacter::StopEscape(AWayout* Wayout)
 	{
 		EscapeWayout = nullptr;
 		bCanEscape = false;
+		if (AEscapePlayerController* PC = GetController<AEscapePlayerController>())
+		{
+			PC->HideEscapeProgress();
+		}
 		// Todo :
 		// 1. 로딩 바 지우기
 	}
 }
 
+void AMyCharacter::SetSpawnPoint(AWayout* NewSpawnPoint)
+{
+	SpawnPoint = NewSpawnPoint;
+}
+
+void AMyCharacter::SetMenuTextArray(const TArray<FText>& NewMenuTextArray)
+{
+	UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::SetMenuTextArray"));
+	MenuTextArray = NewMenuTextArray;
+}
+
+const TArray<FText>& AMyCharacter::GetMenuTextArray() const
+{
+	return MenuTextArray;
+}
+
+AActor* AMyCharacter::GetInteractActor() const
+{
+	return CurrentInteractActor;
+}
+
+int AMyCharacter::GetInteractMenuIndex() const
+{
+	return InteractMenuIndex;
+}
+
 void AMyCharacter::CheckInteract()
 {
-	if (!IsLocallyControlled()) return;
+	//UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::CheckInteract : %s"), *GetName());
 	if (UWorld* World = GetWorld())
 	{
 		FVector Start = FollowCamera->GetComponentLocation() + (CameraBoom->TargetArmLength * FollowCamera->GetForwardVector());
 		FVector End = Start + CheckInteractLength * FollowCamera->GetForwardVector();
 		FHitResult HitResult;
-		if (World->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Camera))
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		if (World->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Camera, Params))
 		{
 			if (IsValid(HitResult.GetActor()))
 			{
@@ -210,10 +252,10 @@ void AMyCharacter::CheckInteract()
 						if (CurrentInteractActor)
 						{
 							// Todo : Do Something before InteractActor
-							HideInteractMenu();
 						}
+						InteractMenuIndex = 0;
 						CurrentInteractActor = HitResult.GetActor();
-						Interface->ShowInteractMenu();
+						Interface->ShowInteractMenu(this);
 					}
 					return;
 				}
@@ -222,22 +264,24 @@ void AMyCharacter::CheckInteract()
 		}
 	}
 	CurrentInteractActor = nullptr;
-	HideInteractMenu();
+	MenuTextArray.Empty();
+	if (HasAuthority())
+	{
+		if (AEscapePlayerController* PC = GetController<AEscapePlayerController>()) PC->HideInteractMenu();
+	}
 }
 
 void AMyCharacter::DoInteract()
 {
-	if (CurrentInteractActor)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::DoInteract : %s"), *CurrentInteractActor->GetName());
-		if (APlayerController* PlayerControlelr = GetController<APlayerController>())
-		{
-			if (ABattleHUD* HUD = PlayerControlelr->GetHUD<ABattleHUD>())
-			{
-				Cast<IInteractInterface>(CurrentInteractActor)->Interact(this, HUD->GetSelectInteractText());
-			}
-		}
-	}
+	UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::DoInteract"));
+
+	Req_DoInteract();
+}
+
+void AMyCharacter::Req_DoInteract_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Req_DoInteract_Implementation : InteractMenuIndex : %d"), InteractMenuIndex);
+	if (IInteractInterface* Interface = Cast<IInteractInterface>(CurrentInteractActor)) Interface->Interact(this, MenuTextArray[InteractMenuIndex]);
 }
 
 void AMyCharacter::Move(const FInputActionValue& Value)
@@ -275,31 +319,95 @@ void AMyCharacter::Look(const FInputActionValue& Value)
 void AMyCharacter::MenuSelect(const FInputActionValue& Value)
 {
 	float WheelValue = Value.Get<float>();
+	//UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::MenuSelect : Value = %f"), WheelValue);
 	if (CurrentInteractActor)
 	{
-		if (APlayerController* PC = GetController<APlayerController>())
+		// Todo : 
+		if (WheelValue > 0)
 		{
-			if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
+			if (HasAuthority() && IsLocallyControlled())
 			{
-				HUD->SelectMenu(WheelValue);
+				InteractMenuIndex = InteractMenuIndex + 1 < MenuTextArray.Num() ? InteractMenuIndex + 1 : InteractMenuIndex;
+				if (AEscapePlayerController* PC = GetController<AEscapePlayerController>())
+				{
+					PC->SelectMenu();
+				}
+			}
+			else
+			{
+				Req_MenuSelectUp();
 			}
 		}
+		else if (WheelValue < 0)
+		{
+			if (HasAuthority() && IsLocallyControlled())
+			{
+				InteractMenuIndex = InteractMenuIndex - 1 >= 0 ? InteractMenuIndex - 1 : InteractMenuIndex;
+				if (AEscapePlayerController* PC = GetController<AEscapePlayerController>())
+				{
+					PC->SelectMenu();
+				}
+			}
+			else
+			{
+				Req_MenuSelectDown();
+			}
+		}
+		UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::MenuSelect : InteractMenuIndex : %d"), InteractMenuIndex);
+	}
+}
+
+void AMyCharacter::Req_MenuSelectUp_Implementation()
+{
+	if (MenuTextArray.Num())
+	{
+		InteractMenuIndex = InteractMenuIndex + 1 < MenuTextArray.Num() ? InteractMenuIndex + 1 : InteractMenuIndex;
+		UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Req_MenuSelectUp : InteractMenuIndex = %d, MenuTextArrayNum = %d"), InteractMenuIndex, MenuTextArray.Num());
+	}
+}
+
+void AMyCharacter::Req_MenuSelectDown_Implementation()
+{
+	if (MenuTextArray.Num() > 0)
+	{
+		InteractMenuIndex = InteractMenuIndex - 1 >= 0 ? InteractMenuIndex - 1 : InteractMenuIndex;
+		UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::Req_MenuSelectDown : InteractMenuIndex = %d"), InteractMenuIndex);
 	}
 }
 
 void AMyCharacter::ToggleInGameMenu(const FInputActionValue& Value)
 {
-	if (APlayerController* PC = GetController<APlayerController>())
-	{
-		if (ABattleHUD* HUD = PC->GetHUD<ABattleHUD>())
-		{
-			HUD->ToggleInGameMenu();
-		}
-	}
+	// Todo :
+	//HUD->GetEscapeWidget()->ToggleInGameMenu();
 }
 
 void AMyCharacter::Aim(const FInputActionValue& Value)
 {
+	Req_Aim();
+}
+
+void AMyCharacter::Req_Aim_Implementation()
+{
 	if (bIsAimed) bIsAimed = false;
 	else bIsAimed = true;
+}
+
+void AMyCharacter::OnRep_EscapeTime()
+{
+	if(IsLocallyControlled()) EscapeTimeDelegate.ExecuteIfBound(EscapeTime);
+}
+
+void AMyCharacter::OnRep_InteractMenuIndex()
+{
+	UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::OnRep_InteractMenuIndex : InteractMenuIndex : %d"), InteractMenuIndex);
+	if (AEscapePlayerController* PC = GetController<AEscapePlayerController>()) PC->SelectMenu();
+}
+
+void AMyCharacter::OnRep_MenuTextArray()
+{
+	if (AEscapePlayerController* PC = GetController<AEscapePlayerController>())
+	{
+		if (MenuTextArray.Num() == 0) PC->HideInteractMenu();
+		else if (MenuTextArray.Num() > 0) PC->ShowInteractMenu();
+	}
 }

@@ -9,6 +9,7 @@
 /**
  * 
  */
+class AMyCharacter;
 UCLASS()
 class NAKWON_API AWayout : public AZone
 {
@@ -16,6 +17,11 @@ class NAKWON_API AWayout : public AZone
 	
 public:
 	const TArray<AWayout*>& GetDestinationArray() const;
+
+	int GetPlayerCount() const;
+	bool IsSpawnable() const;
+
+	void SetSpawnPoint(AMyCharacter* Character);
 private:
 	virtual void EnterPlayer(AMyCharacter* EnteredPlayer);
 	virtual void LeavePlayer(AMyCharacter* LeavedPlayer);
@@ -24,4 +30,8 @@ private:
 	TArray<AWayout*> DestinationArray;
 	UPROPERTY(EditInstanceOnly, Meta = (AllowPrivateAccess))
 	float EscapeTime = 5.0f;
+	UPROPERTY(EditInstanceOnly, Meta = (AllowPrivateAccess))
+	int PlayerCount = 0;
+	UPROPERTY(EditInstanceOnly, Meta = (AllowPrivateAccess, MakeEditWidget))
+	TArray<FTransform> SpawnPointArray;
 };

@@ -9,6 +9,8 @@
 
 #include "MyCharacter.generated.h"
 
+DECLARE_DELEGATE_OneParam(FDele_Single_One_Float, float);
+
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -38,8 +40,9 @@ public:
 	// Interact
 	// Inherited via IInteractInterface
 	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) override;
-	virtual void ShowInteractMenu() override;
-	void HideInteractMenu();
+	virtual void ShowInteractMenu(AMyCharacter* InteractCharacter) override;
+
+	bool CheckKnowItem(FName ItemName);
 
 protected:
 	// Called when the game starts or when spawned
@@ -58,20 +61,51 @@ public:
 
 	void Escape(AWayout* Wayout, float NewEscapeTime);
 	void StopEscape(AWayout* Wayout);
+	void SetSpawnPoint(AWayout* NewSpawnPoint);
 
+	// Interact
+	void SetMenuTextArray(const TArray<FText>& NewMenuTextArray);
+	const TArray<FText>& GetMenuTextArray() const;
+
+	AActor* GetInteractActor() const;
+	int GetInteractMenuIndex() const;
 private:
 	// Interact
 	void CheckInteract();
 	void DoInteract();
+	UFUNCTION(Server, Reliable)
+	void Req_DoInteract();
+	void Req_DoInteract_Implementation();
 
 	// Action
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void MenuSelect(const FInputActionValue& Value);
+	UFUNCTION(Server, Reliable)
+	void Req_MenuSelectUp();
+	void Req_MenuSelectUp_Implementation();
+	UFUNCTION(Server, Reliable)
+	void Req_MenuSelectDown();
+	void Req_MenuSelectDown_Implementation();
 	void ToggleInGameMenu(const FInputActionValue& Value);
 	void Aim(const FInputActionValue& Value);
+	UFUNCTION(Server, Reliable)
+	void Req_Aim();
+	void Req_Aim_Implementation();
 
 private:
+	UFUNCTION()
+	void OnRep_EscapeTime();
+	UFUNCTION()
+	void OnRep_InteractMenuIndex();
+	UFUNCTION()
+	void OnRep_MenuTextArray();
+public:
+	// Delegate
+	FDele_Single_One_Float EscapeTimeDelegate;
+private:
+	// Save
+	TArray<FName> KnownItemArray;
 	// Inventory
 	UPROPERTY(EditAnywhere, Meta = (AllowPrivateAccess = true))
 	UInventoryComponent* InventoryComponent;
@@ -79,9 +113,12 @@ private:
 	// Interact
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
 	float CheckInteractLength;
-
-	UPROPERTY(Replicated, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(EditInstanceOnly, Replicated, Meta = (AllowPrivateAccess = true))
 	AActor* CurrentInteractActor;
+	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_MenuTextArray, Meta = (AllowPrivateAccess = true))
+	TArray<FText> MenuTextArray;
+	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_InteractMenuIndex, Meta = (AllowPrivateAccess = true))
+	int InteractMenuIndex;
 
 	// Input
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
@@ -107,8 +144,9 @@ private:
 	AWayout* EscapeWayout;
 	// Escape
 	bool bCanEscape = false;
-	float MaxEscapeTime;
-	float CurrentEscapeTime;
+
+	UPROPERTY(EditInstanceOnly, ReplicatedUsing = OnRep_EscapeTime, Meta = (AllowPrivateAccess))
+	float EscapeTime;
 
 	// Camera Component
 	UPROPERTY(EditDefaultsOnly, Meta = (AllowPrivateAccess = true))
@@ -117,8 +155,8 @@ private:
 	UCameraComponent* FollowCamera;
 
 	// Action State 
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
 	bool bIsAimed;
-	UPROPERTY(BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
+	UPROPERTY(Replicated, BlueprintReadOnly, Meta = (AllowPrivateAccess = true))
 	bool bIsStopBreath;
 };
