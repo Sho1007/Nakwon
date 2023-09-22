@@ -8,6 +8,7 @@
 #include "../Item/ItemBase.h"
 
 #include "../Widget/Escape/EscapeWidget.h"
+#include "../Interface/InteractInterface.h"
 
 void AEscapePlayerController::SetSpawnPoint_Implementation()
 {
@@ -45,12 +46,10 @@ void AEscapePlayerController::ShowInteractMenu()
 
 	if (AMyCharacter* MyCharacter = GetPawn<AMyCharacter>())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AEscapePlayerController::ShowInteractMenu : Check Character"));
-		EscapeWidget->ShowInteractMenu(MyCharacter->GetMenuTextArray(), FText::FromName(TEXT("Test Name")));
-		if (AItemBase* Item = Cast<AItemBase>(MyCharacter->GetInteractActor()))
+		if (IInteractInterface* Interface = Cast<IInteractInterface>(MyCharacter->GetInteractActor()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("AEscapePlayerController::ShowInteractMenu : Check Item"));
-			// EscapeWidget->ShowInteractMenu(MyCharacter->GetMenuTextArray(), Item->GetItemName());
+			UE_LOG(LogTemp, Warning, TEXT("AEscapePlayerController::ShowInteractMenu : Check Character"));
+			EscapeWidget->ShowInteractMenu(MyCharacter->GetMenuTextArray(), Interface->GetActorName());
 		}
 	}
 }
@@ -58,6 +57,11 @@ void AEscapePlayerController::ShowInteractMenu()
 void AEscapePlayerController::HideInteractMenu()
 {
 	if (EscapeWidget) EscapeWidget->HideItemMenu();
+}
+
+void AEscapePlayerController::ToggleInGameMenu()
+{
+	if (EscapeWidget) EscapeWidget->ToggleInGameMenu();
 }
 
 void AEscapePlayerController::SelectMenu()

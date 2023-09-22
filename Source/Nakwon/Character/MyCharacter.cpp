@@ -378,7 +378,10 @@ void AMyCharacter::Req_MenuSelectDown_Implementation()
 void AMyCharacter::ToggleInGameMenu(const FInputActionValue& Value)
 {
 	// Todo :
-	//HUD->GetEscapeWidget()->ToggleInGameMenu();
+	if (AEscapePlayerController* PC = GetController<AEscapePlayerController>())
+	{
+		PC->ToggleInGameMenu();
+	}
 }
 
 void AMyCharacter::Aim(const FInputActionValue& Value)
@@ -410,4 +413,9 @@ void AMyCharacter::OnRep_MenuTextArray()
 		if (MenuTextArray.Num() == 0) PC->HideInteractMenu();
 		else if (MenuTextArray.Num() > 0) PC->ShowInteractMenu();
 	}
+}
+
+FText AMyCharacter::GetActorName()
+{
+	return FText::FromName(TEXT("Ω√√º"));
 }

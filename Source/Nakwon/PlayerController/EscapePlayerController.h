@@ -34,6 +34,8 @@ public:
 
 	void ShowInteractMenu();
 	void HideInteractMenu();
+
+	void ToggleInGameMenu();
 	
 	void SelectMenu();
 	

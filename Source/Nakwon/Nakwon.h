@@ -40,11 +40,36 @@ enum class EItemType : uint8
 UENUM(BlueprintType)
 enum class EEquipmentType : uint8
 {
+	NONE,
+	EARPIECE,
 	HEADGEAR,
-	ARMOR,
+	FACECOVER,
+	ARMBAND,
+	BODYARMOR,
+	EYEWEAR,
 	WEAPON,
 	RIG,
 	BACKPACK,
 	POUCH,
-	SIZE                                                      
+	SIZE                                                 
+};
+
+UENUM(BlueprintType)
+enum class EEquipmentSlotType : uint8
+{
+	NONE,
+	EARPIECE,
+	HEADGEAR,
+	FACECOVER,
+	ARMBAND,
+	BODYARMOR,
+	EYEWEAR,
+	ONSLING,
+	ONBACK,
+	HOLSTER,
+	SCABBARD,
+	RIG,
+	BACKPACK,
+	POUCH,
+	SIZE
 };

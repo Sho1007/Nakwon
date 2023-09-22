@@ -25,4 +25,5 @@ class NAKWON_API IInteractInterface
 public:
 	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) = 0;
 	virtual void ShowInteractMenu(AMyCharacter* InteractCharacter) = 0;
+	virtual FText GetActorName() = 0;
 };

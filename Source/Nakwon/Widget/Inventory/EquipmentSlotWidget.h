@@ -23,7 +23,7 @@ public:
 	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (AllowPrivateAccess = true))
-	EEquipmentType EquipmentType;
+	EEquipmentSlotType SlotType;
 
 	UPROPERTY(Meta = (AllowPrivateAccess = true, BindWidget))
 	UBorder* Border;

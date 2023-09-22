@@ -4,10 +4,12 @@
 
 #include "../Nakwon.h"
 #include "Components/ActorComponent.h"
-#include "../Item/ItemBase.h"
 #include "InventoryComponent.generated.h"
 
 
+class AItemBase;
+class AEquipmentBase;
+class AStorageEquipmentBase;
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class NAKWON_API UInventoryComponent : public UActorComponent
 {
@@ -22,8 +24,8 @@ public:
 	void TakeItem_Implementation(AItemBase* TargetItem);
 	
 	UFUNCTION(Server, Reliable)
-	void EquipItem(AItemBase* TargetItem);
-	void EquipItem_Implementation(AItemBase* TargetItem);
+	void EquipItem(EEquipmentSlotType SlotType, AEquipmentBase* TargetEquipment);
+	void EquipItem_Implementation(EEquipmentSlotType SlotType, AEquipmentBase* TargetEquipment);
 
 protected:
 	// Called when the game starts
@@ -36,7 +38,10 @@ public:
 private:
 	AItemBase* OnSlingWeaponSlot = nullptr;
 
-	TArray<AItemBase*> EquipmentArray;
-	UPROPERTY(Replicated, EditAnywhere, Meta = (AllowPrivateAccess = true))
-	TArray<FItemInstance> ItemArray;
+	TArray<AEquipmentBase*> EquipmentArray;
+
+	AStorageEquipmentBase* RigSlot;
+	AStorageEquipmentBase* PocketSlot;
+	AStorageEquipmentBase* BackpackSlot;
+	AStorageEquipmentBase* PouchSlot;
 };

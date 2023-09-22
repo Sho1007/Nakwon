@@ -12,47 +12,54 @@
 #include "ItemBase.generated.h"
 
 // Inventory에 존재하면, 표현하기 위한 구조체
+class AItemBase;
 USTRUCT(BlueprintType)
 struct FItemInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
 	FItemInfo()
-		: Name(FText()), Class(nullptr), Type(EItemType::NONE), Image(nullptr), Width(0), Height(0)
+		: Name(FText()), Class(nullptr), Type(EItemType::NONE), Image(nullptr)
 	{
 	}
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FText Name;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<AItemBase> Class;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	EItemType Type;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	UTexture2D* Image;
-	UPROPERTY(EditDefaultsOnly)
-	uint32 Width;
-	UPROPERTY(EditDefaultsOnly)
-	uint32 Height;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
+	FIntPoint Size;
+	UPROPERTY(EditAnywhere)
 	uint32 MaxStack;
 };
+
 USTRUCT(BlueprintType)
 struct FItemInstance : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
-	FItemInstance() {}
+	FItemInstance() : Guid(FGuid::NewGuid()), ItemRow(FName()), bIsInStorage(false), bIsRotated(false), CurrentStack(1), bIsFromRaid(false)
+	{}
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FGuid Guid;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FName ItemRow;
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FName, int32> IntMap;
-	UPROPERTY(EditDefaultsOnly)
-	TMap<FName, float> FloatMap;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	TArray<FGuid> ChildArray;
+	UPROPERTY(EditAnywhere)
+	bool bIsInStorage;
+	UPROPERTY(EditAnywhere)
+	bool bIsRotated;
+	UPROPERTY(EditAnywhere)
+	FIntPoint StoragePosition;
+	UPROPERTY(EditAnywhere)
+	int CurrentStack;
+	UPROPERTY(EditAnywhere)
+	bool bIsFromRaid;
 };
 
 class AMyCharacter;
@@ -79,37 +86,38 @@ public:
 	virtual void ShowInteractMenu(AMyCharacter* InteractCharacter) override;
 
 	// DataBase
-	virtual void LoadData(FItemInstance* ItemInstance);
-	virtual void CreateInstance();
+	virtual void LoadData(FItemInstance* NewItemInstance);
+	virtual void CreateInstance(bool bFromStore);
+
+	// Item
+	void Rotate();
 
 public:
 	// Getter / Setter
 	FName GetItemRow() const;
-	FItemInstance GetItemInstance() const;
+	const FItemInstance& GetItemInstance() const;
+	const FItemInfo& GetItemInfo() const;
 	FText GetItemName() const;
-
+	FIntPoint GetSize() const;
 protected:
 	// Interact Action
-	UFUNCTION(Server, Reliable)
 	virtual void UseItem();
-	virtual void UseItem_Implementation();
 
-	UFUNCTION(Server, Reliable)
 	virtual void TakeItem(AMyCharacter* InteractCharacter);
-	virtual void TakeItem_Implementation(AMyCharacter* InteractCharacter);
 
-	UFUNCTION(Server, Reliable)
 	virtual void ExamineItem();
-	virtual void ExamineItem_Implementation();
 protected:
 	// Item Info
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FItemInfo ItemInfo;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	TArray<FText> MenuTextArray;
 
 	// Item Instance
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	FItemInstance ItemInstance;
+
+	// Inherited via IInteractInterface
+	virtual FText GetActorName() override;
 };

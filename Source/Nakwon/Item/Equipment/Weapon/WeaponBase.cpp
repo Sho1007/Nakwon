@@ -18,7 +18,7 @@ void AWeaponBase::SetRenderTarget()
 {
 	if (ParentMaterial->IsValidLowLevelFast())
 	{
-		WeaponImageRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this, ItemInfo.Width * 32, ItemInfo.Height * 32);
+		WeaponImageRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this, ItemInfo.Size.X * 32, ItemInfo.Size.Y * 32);
 		WeaponImageMaterial = UKismetMaterialLibrary::CreateDynamicMaterialInstance(this, ParentMaterial);
 		WeaponImageMaterial->SetTextureParameterValue(TEXT("FinalColorTexture"), WeaponImageRenderTarget);
 

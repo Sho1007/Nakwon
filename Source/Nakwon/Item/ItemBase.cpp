@@ -96,10 +96,23 @@ void AItemBase::LoadData(FItemInstance* NewItemInstance)
 	ItemInstance = *NewItemInstance;
 }
 
-void AItemBase::CreateInstance()
+void AItemBase::CreateInstance(bool bFromStore)
 {
-	ItemInstance.Guid = FGuid::NewGuid();
-	ItemInstance.IntMap.Emplace(TEXT("CurrentStack"), 1);
+	if (bFromStore)
+	{
+		ItemInstance.CurrentStack = ItemInfo.MaxStack;
+		ItemInstance.bIsFromRaid = false;
+	}
+	else
+	{
+		ItemInstance.CurrentStack = FMath::RandRange(1, ItemInfo.MaxStack);
+		ItemInstance.bIsFromRaid = true;
+	}
+}
+
+void AItemBase::Rotate()
+{
+	ItemInstance.bIsRotated = !ItemInstance.bIsRotated;
 }
 
 FName AItemBase::GetItemRow() const
@@ -107,9 +120,14 @@ FName AItemBase::GetItemRow() const
 	return ItemInstance.ItemRow;
 }
 
-FItemInstance AItemBase::GetItemInstance() const
+const FItemInstance& AItemBase::GetItemInstance() const
 {
 	return ItemInstance;
+}
+
+const FItemInfo& AItemBase::GetItemInfo() const
+{
+	return ItemInfo;
 }
 
 FText AItemBase::GetItemName() const
@@ -117,12 +135,18 @@ FText AItemBase::GetItemName() const
 	return ItemInfo.Name;
 }
 
-void AItemBase::UseItem_Implementation()
+FIntPoint AItemBase::GetSize() const
+{
+	if (ItemInstance.bIsRotated) return { ItemInfo.Size.Y, ItemInfo.Size.X };
+	return ItemInfo.Size;
+}
+
+void AItemBase::UseItem()
 {
 	UE_LOG(LogTemp, Warning, TEXT("AItemBase::UseItem : %s"), *this->GetName());
 }
 
-void AItemBase::TakeItem_Implementation(AMyCharacter* InteractCharacter)
+void AItemBase::TakeItem(AMyCharacter* InteractCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("AItemBase::TakeItem : %s to %s"), *this->GetName(), *InteractCharacter->GetName());
 	if (UInventoryComponent* InventoryComponent = Cast<UInventoryComponent>(InteractCharacter->FindComponentByClass(UInventoryComponent::StaticClass())))
@@ -135,7 +159,12 @@ void AItemBase::TakeItem_Implementation(AMyCharacter* InteractCharacter)
 	}
 }
 
-void AItemBase::ExamineItem_Implementation()
+void AItemBase::ExamineItem()
 {
 	UE_LOG(LogTemp, Warning, TEXT("AItemBase::ExamineItem : %s"), *this->GetName());
+}
+
+FText AItemBase::GetActorName()
+{
+	return ItemInfo.Name;
 }

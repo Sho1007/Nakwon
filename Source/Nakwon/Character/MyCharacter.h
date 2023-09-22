@@ -41,6 +41,7 @@ public:
 	// Inherited via IInteractInterface
 	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) override;
 	virtual void ShowInteractMenu(AMyCharacter* InteractCharacter) override;
+	virtual FText GetActorName() override;
 
 	bool CheckKnowItem(FName ItemName);
 

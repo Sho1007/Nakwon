@@ -23,10 +23,10 @@ void UEquipmentSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const
 {
 	if (GEngine)
 	{
-		if (const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEquipmentType"), true))
+		/*if (const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEquipmentType"), true))
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Yellow, FString::Printf(TEXT("%s Entered"), *EnumPtr->GetNameStringByValue((int64)EquipmentType)));
-		}
+		}*/
 	}
 }
 
@@ -34,9 +34,9 @@ void UEquipmentSlotWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
 	if (GEngine)
 	{
-		if (const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEquipmentType"), true))
+		/*if (const UEnum* EnumPtr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EEquipmentType"), true))
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 1, FColor::Yellow, FString::Printf(TEXT("%s Leaved"), *EnumPtr->GetNameStringByValue((int64)EquipmentType)));
-		}
+		}*/
 	}
 }
