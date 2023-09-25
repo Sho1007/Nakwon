@@ -38,8 +38,7 @@ void AItemBase::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
 	UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact : %s"), *InteractionName.ToString());
 
 	if (InteractionName.CompareTo(FText::FromName(TEXT("Use"))) == 0)
-	{
-		
+	{	
 		UseItem();
 	}
 	else if (InteractionName.CompareTo(FText::FromName(TEXT("Take"))) == 0)
@@ -50,7 +49,7 @@ void AItemBase::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
 	else if (InteractionName.CompareTo(FText::FromName(TEXT("Examine"))) == 0)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("AItemBase::Interact Examine"));
-		ExamineItem();
+		ExamineItem(InteractCharacter);
 	}
 }
 
@@ -82,13 +81,6 @@ void AItemBase::ShowInteractMenu(AMyCharacter* InteractCharacter)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AItemBase::ShowInteractMenu : Invalid PlayerController Class"));
 	}
-	/*if (ABattleHUD* HUD = GetWorld()->GetFirstPlayerController()->GetHUD<ABattleHUD>())
-	{
-		if (FItemInfo* ItemInfo = GetGameInstance<UMyGameInstance>()->FindItemInfo(ItemInstance.ItemRow))
-		{
-			HUD->ShowInteractMenu(ItemMenuArray, ItemInfo->ItemName);
-		}
-	}*/
 }
 
 void AItemBase::LoadData(FItemInstance* NewItemInstance)
@@ -159,9 +151,12 @@ void AItemBase::TakeItem(AMyCharacter* InteractCharacter)
 	}
 }
 
-void AItemBase::ExamineItem()
+void AItemBase::ExamineItem(AMyCharacter* InteractCharacter)
 {
 	UE_LOG(LogTemp, Warning, TEXT("AItemBase::ExamineItem : %s"), *this->GetName());
+
+	// Todo : Data Component 에서 실행되야 하지 않나?
+	InteractCharacter->ExamineItem(this->ItemInstance.ItemRow);
 }
 
 FText AItemBase::GetActorName()

@@ -38,10 +38,14 @@ public:
 private:
 	AItemBase* OnSlingWeaponSlot = nullptr;
 
+	UPROPERTY(Replicated, EditAnywhere, Meta = (AllowPrivateAccess))
 	TArray<AEquipmentBase*> EquipmentArray;
-
+	UPROPERTY(Replicated, EditAnywhere, Meta = (AllowPrivateAccess))
 	AStorageEquipmentBase* RigSlot;
+	UPROPERTY(Replicated, EditAnywhere, Meta = (AllowPrivateAccess))
 	AStorageEquipmentBase* PocketSlot;
+	UPROPERTY(Replicated, EditAnywhere, Meta = (AllowPrivateAccess))
 	AStorageEquipmentBase* BackpackSlot;
+	UPROPERTY(Replicated, EditAnywhere, Meta = (AllowPrivateAccess))
 	AStorageEquipmentBase* PouchSlot;
 };

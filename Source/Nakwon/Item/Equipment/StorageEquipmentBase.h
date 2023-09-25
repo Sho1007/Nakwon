@@ -134,6 +134,6 @@ public:
 
 	bool PutItem(AItemBase* TargetItem);
 private:
-	UPROPERTY(Replicated, Meta = (AllowPrivateAccess))
+	UPROPERTY(EditAnywhere, Replicated, Meta = (AllowPrivateAccess))
 	TArray<FStorage> Storage;
 };

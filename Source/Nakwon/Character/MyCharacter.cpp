@@ -67,7 +67,7 @@ void AMyCharacter::ShowInteractMenu(AMyCharacter* InteractCharacter)
 
 bool AMyCharacter::CheckKnowItem(FName ItemName)
 {
-	return KnownItemArray.Find(ItemName) != INDEX_NONE;
+	return KnownItemArray.Find(ItemName) != NULL;
 }
 
 // Called when the game starts or when spawned
@@ -221,6 +221,13 @@ const TArray<FText>& AMyCharacter::GetMenuTextArray() const
 	return MenuTextArray;
 }
 
+void AMyCharacter::ExamineItem(FName ItemName)
+{
+	KnownItemArray.Add(ItemName);
+	InteractMenuIndex = 0;
+	Cast<IInteractInterface>(CurrentInteractActor)->ShowInteractMenu(this);
+}
+
 AActor* AMyCharacter::GetInteractActor() const
 {
 	return CurrentInteractActor;
@@ -253,8 +260,8 @@ void AMyCharacter::CheckInteract()
 						{
 							// Todo : Do Something before InteractActor
 						}
-						InteractMenuIndex = 0;
 						CurrentInteractActor = HitResult.GetActor();
+						InteractMenuIndex = 0;
 						Interface->ShowInteractMenu(this);
 					}
 					return;
@@ -274,7 +281,6 @@ void AMyCharacter::CheckInteract()
 void AMyCharacter::DoInteract()
 {
 	UE_LOG(LogTemp, Warning, TEXT("AMyCharacter::DoInteract"));
-
 	Req_DoInteract();
 }
 

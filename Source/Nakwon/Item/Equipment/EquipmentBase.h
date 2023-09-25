@@ -54,6 +54,12 @@ public:
 	virtual void LoadData(FItemInstance* NewItemInstance) override;
 	virtual void CreateInstance(bool bFromStore) override;
 
+	virtual void Interact(AMyCharacter* InteractCharacter, FText InteractionName) override;
+
+	UFUNCTION(NetMulticast, Reliable)
+	virtual void SetEquipped(AMyCharacter* InteractCharacter, EEquipmentSlotType SlotType);
+	virtual void SetEquipped_Implementation(AMyCharacter* InteractCharacter, EEquipmentSlotType SlotType);
+
 public:
 	// Getter / Setter
 	const FEquipmentInfo& GetEquipmentInfo() const;

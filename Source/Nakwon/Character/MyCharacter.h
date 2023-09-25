@@ -68,6 +68,8 @@ public:
 	void SetMenuTextArray(const TArray<FText>& NewMenuTextArray);
 	const TArray<FText>& GetMenuTextArray() const;
 
+	void ExamineItem(FName ItemName);
+
 	AActor* GetInteractActor() const;
 	int GetInteractMenuIndex() const;
 private:
@@ -106,7 +108,7 @@ public:
 	FDele_Single_One_Float EscapeTimeDelegate;
 private:
 	// Save
-	TArray<FName> KnownItemArray;
+	TSet<FName> KnownItemArray;
 	// Inventory
 	UPROPERTY(EditAnywhere, Meta = (AllowPrivateAccess = true))
 	UInventoryComponent* InventoryComponent;

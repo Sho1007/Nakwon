@@ -5,7 +5,9 @@
 
 #include <Net/UnrealNetwork.h>
 
+#include "../../Character/MyCharacter.h"
 #include "../../GameInstance/MyGameInstance.h"
+#include "../../Component/InventoryComponent.h"
 
 void AEquipmentBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -36,6 +38,34 @@ void AEquipmentBase::CreateInstance(bool bFromStore)
 	{
 		EquipmentInstance.CurrentDurability = FMath::RandRange(1, EquipmentInfo.MaxDurability);
 	}
+}
+
+void AEquipmentBase::Interact(AMyCharacter* InteractCharacter, FText InteractionName)
+{
+	Super::Interact(InteractCharacter, InteractionName);
+
+	if (InteractionName.CompareTo(FText::FromName(TEXT("Equip"))) == 0)
+	{
+		if (UInventoryComponent* InventoryComponent = Cast<UInventoryComponent>(InteractCharacter->GetComponentByClass(UInventoryComponent::StaticClass())))
+		{
+			InventoryComponent->EquipItem(EEquipmentSlotType::NONE, this);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AEquipmentBase::Interact : Invalid Inventory Component"));
+		}
+	}
+}
+
+void AEquipmentBase::SetEquipped_Implementation(AMyCharacter* InteractCharacter, EEquipmentSlotType SlotType)
+{
+	if (InteractCharacter->HasAuthority())
+	{
+		SetOwner(InteractCharacter);
+		// Todo : EquipmentSlotType 에 맞게 Socket Name 1대 1매칭 (배열?) 로 리턴
+		//AttachToComponent(InteractCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, !!);
+	}
+	SetActorEnableCollision(false);
 }
 
 const FEquipmentInfo& AEquipmentBase::GetEquipmentInfo() const

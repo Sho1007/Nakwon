@@ -105,7 +105,7 @@ protected:
 
 	virtual void TakeItem(AMyCharacter* InteractCharacter);
 
-	virtual void ExamineItem();
+	virtual void ExamineItem(AMyCharacter* InteractCharacter);
 protected:
 	// Item Info
 	UPROPERTY(EditAnywhere)
